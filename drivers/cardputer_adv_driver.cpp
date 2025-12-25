@@ -5,10 +5,10 @@
 void initialize_driver() {
     Serial.println("Initializing Cardputer ADV driver...");
     
-    // Initialize keyboard (Cardputer has built-in keyboard)
-    // The M5Unified library handles keyboard initialization
+    // Note: M5Unified library automatically handles keyboard initialization
+    // when M5.begin() is called. Keyboard state is updated via M5.update() in the main loop.
     
-    // Check if device is properly initialized
+    // Verify device is properly initialized
     if (M5.Display.width() > 0 && M5.Display.height() > 0) {
         Serial.println("Display initialized successfully");
         Serial.printf("Display size: %dx%d\n", M5.Display.width(), M5.Display.height());

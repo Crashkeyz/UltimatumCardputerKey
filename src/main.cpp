@@ -27,9 +27,13 @@ void setup() {
 }
 
 void loop() {
-    // Update M5 state
+    // Update M5 state (handles keyboard, display, and other peripherals)
     M5.update();
     
     // Main loop logic here
+    // TODO: Implement keyboard input handling
+    // TODO: Implement display updates
+    // TODO: Add main application functionality
+    
     delay(10);
 }
