@@ -5,15 +5,15 @@
 extern void initialize_driver();
 
 void setup() {
-    // Initialize M5Stack Cardputer
-    auto cfg = M5.config();
-    M5.begin(cfg);
-    
-    // Initialize serial for debugging
+    // Initialize serial for debugging (before M5.begin for early debug output)
     Serial.begin(115200);
     delay(100);
     
     Serial.println("UltimatumCardputerKey Starting...");
+    
+    // Initialize M5Stack Cardputer
+    auto cfg = M5.config();
+    M5.begin(cfg);
     
     // Initialize display
     M5.Display.setRotation(1);
