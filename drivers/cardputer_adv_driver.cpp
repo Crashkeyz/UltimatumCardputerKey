@@ -344,8 +344,7 @@ void wifi_beacon_spam() {
         File logFile = SD.open("/logs/beacon_spam.txt", FILE_APPEND);
         if (logFile) {
             logFile.printf("=== Beacon Spam %lu ===\n", millis());
-            const int numFakeSSIDs = sizeof(fakeSSIDs) / sizeof(fakeSSIDs[0]);
-            for (int i = 0; i < numFakeSSIDs; i++) {
+            for (int i = 0; i < TOTAL_FAKE_SSIDS; i++) {
                 logFile.printf("%s\n", fakeSSIDs[i]);
             }
             logFile.close();
