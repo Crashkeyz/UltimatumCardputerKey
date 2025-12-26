@@ -55,7 +55,8 @@ bool initialize_sd_card() {
     
     // Create required directory structure for security toolkit
     const char* directories[] = {"/data", "/keys", "/logs", "/captures", "/loot", "/firmware"};
-    for (int i = 0; i < 6; i++) {
+    const int numDirectories = sizeof(directories) / sizeof(directories[0]);
+    for (int i = 0; i < numDirectories; i++) {
         if (!SD.exists(directories[i])) {
             SD.mkdir(directories[i]);
             Serial.printf("Created %s directory on SD card\n", directories[i]);
@@ -98,6 +99,12 @@ void initialize_driver() {
 // MENU SYSTEM & UI
 // ========================================
 
+// Menu item counts
+#define MAIN_MENU_ITEMS 4
+#define WIFI_MENU_ITEMS 5
+#define DISPLAY_MAX_SSIDS 7
+#define TOTAL_FAKE_SSIDS 15
+
 enum MenuState {
     MENU_MAIN,
     MENU_WIFI,
@@ -113,7 +120,7 @@ enum MenuState {
 
 MenuState currentMenu = MENU_MAIN;
 int menuSelection = 0;
-bool sdCardAvailable = false;
+static bool sdCardAvailable = false;
 
 void display_status_bar() {
     M5.Display.fillRect(0, 0, 240, 16, TFT_DARKGREY);
@@ -320,7 +327,7 @@ void wifi_beacon_spam() {
     };
     
     M5.Display.setTextSize(1);
-    for (int i = 0; i < min(7, 15); i++) {
+    for (int i = 0; i < min(DISPLAY_MAX_SSIDS, TOTAL_FAKE_SSIDS); i++) {
         M5.Display.setCursor(10, 60 + i * 8);
         M5.Display.printf("- %s\n", fakeSSIDs[i]);
     }
@@ -337,7 +344,8 @@ void wifi_beacon_spam() {
         File logFile = SD.open("/logs/beacon_spam.txt", FILE_APPEND);
         if (logFile) {
             logFile.printf("=== Beacon Spam %lu ===\n", millis());
-            for (int i = 0; i < 15; i++) {
+            const int numFakeSSIDs = sizeof(fakeSSIDs) / sizeof(fakeSSIDs[0]);
+            for (int i = 0; i < numFakeSSIDs; i++) {
                 logFile.printf("%s\n", fakeSSIDs[i]);
             }
             logFile.close();
@@ -556,10 +564,10 @@ void driver_loop() {
         switch (currentMenu) {
             case MENU_MAIN:
                 if (keycode == 0x52 || key == 'w') { // Up arrow or W
-                    menuSelection = (menuSelection - 1 + 4) % 4;
+                    menuSelection = (menuSelection - 1 + MAIN_MENU_ITEMS) % MAIN_MENU_ITEMS;
                     display_main_menu();
                 } else if (keycode == 0x51 || key == 's') { // Down arrow or S
-                    menuSelection = (menuSelection + 1) % 4;
+                    menuSelection = (menuSelection + 1) % MAIN_MENU_ITEMS;
                     display_main_menu();
                 } else if (keycode == 0x28 || key == '\n' || key == '\r') { // Enter
                     if (menuSelection == 0) {
@@ -581,10 +589,10 @@ void driver_loop() {
                 
             case MENU_WIFI:
                 if (keycode == 0x52 || key == 'w') { // Up arrow or W
-                    menuSelection = (menuSelection - 1 + 5) % 5;
+                    menuSelection = (menuSelection - 1 + WIFI_MENU_ITEMS) % WIFI_MENU_ITEMS;
                     display_wifi_menu();
                 } else if (keycode == 0x51 || key == 's') { // Down arrow or S
-                    menuSelection = (menuSelection + 1) % 5;
+                    menuSelection = (menuSelection + 1) % WIFI_MENU_ITEMS;
                     display_wifi_menu();
                 } else if (keycode == 0x28 || key == '\n' || key == '\r') { // Enter
                     if (menuSelection == 0) {
