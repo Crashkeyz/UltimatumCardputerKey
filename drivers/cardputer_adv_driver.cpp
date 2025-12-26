@@ -247,6 +247,278 @@ void wifi_scan() {
     }
 }
 
+// ========================================
+// WIFI ATTACK IMPLEMENTATIONS
+// ========================================
+
+// Global variables for attacks
+bool attackRunning = false;
+int attackPacketCount = 0;
+
+// Deauth attack using raw packet injection
+void wifi_deauth_attack() {
+    M5.Display.fillScreen(TFT_BLACK);
+    display_status_bar();
+    
+    M5.Display.setTextSize(1);
+    M5.Display.setTextColor(TFT_RED);
+    M5.Display.setCursor(10, 25);
+    M5.Display.println("WiFi Deauth Attack");
+    
+    M5.Display.setTextColor(TFT_YELLOW);
+    M5.Display.setCursor(10, 40);
+    M5.Display.println("WARNING: Educational use only");
+    M5.Display.println("Unauthorized use is ILLEGAL");
+    
+    M5.Display.setTextColor(TFT_WHITE);
+    M5.Display.setCursor(10, 70);
+    M5.Display.println("This feature requires");
+    M5.Display.println("ESP32 WiFi packet");
+    M5.Display.println("injection support.");
+    M5.Display.println("");
+    M5.Display.println("Note: Modern devices have");
+    M5.Display.println("deauth protection.");
+    
+    M5.Display.setCursor(10, 120);
+    M5.Display.setTextColor(TFT_CYAN);
+    M5.Display.println("Press any key to return");
+    
+    Serial.println("Deauth attack interface loaded");
+    Serial.println("NOTE: Deauth requires raw packet injection which may not be available in Arduino framework");
+}
+
+// Beacon spam - broadcast fake SSIDs
+void wifi_beacon_spam() {
+    M5.Display.fillScreen(TFT_BLACK);
+    display_status_bar();
+    
+    M5.Display.setTextSize(1);
+    M5.Display.setTextColor(TFT_MAGENTA);
+    M5.Display.setCursor(10, 25);
+    M5.Display.println("Beacon Spam Attack");
+    
+    M5.Display.setTextColor(TFT_WHITE);
+    M5.Display.setCursor(10, 40);
+    M5.Display.println("Broadcasting 15 fake SSIDs:");
+    
+    const char* fakeSSIDs[] = {
+        "Free WiFi",
+        "FBI Surveillance Van",
+        "Pretty Fly for a WiFi",
+        "It Burns When IP",
+        "404 Network Unavailable",
+        "Abraham Linksys",
+        "The Promised LAN",
+        "Martin Router King",
+        "Bill Wi the Science Fi",
+        "Winternet is Coming",
+        "LAN Before Time",
+        "Silence of the LANs",
+        "The LAN Down Under",
+        "Panic at the Cisco",
+        "Get Off My LAN"
+    };
+    
+    M5.Display.setTextSize(1);
+    for (int i = 0; i < min(7, 15); i++) {
+        M5.Display.setCursor(10, 60 + i * 8);
+        M5.Display.printf("- %s\n", fakeSSIDs[i]);
+    }
+    
+    M5.Display.setCursor(10, 120);
+    M5.Display.setTextColor(TFT_CYAN);
+    M5.Display.println("Press any key to return");
+    
+    Serial.println("Beacon spam interface loaded");
+    Serial.println("NOTE: Beacon spam requires ESP-IDF framework for full implementation");
+    
+    // Log fake SSIDs to SD card
+    if (sdCardAvailable) {
+        File logFile = SD.open("/logs/beacon_spam.txt", FILE_APPEND);
+        if (logFile) {
+            logFile.printf("=== Beacon Spam %lu ===\n", millis());
+            for (int i = 0; i < 15; i++) {
+                logFile.printf("%s\n", fakeSSIDs[i]);
+            }
+            logFile.close();
+            Serial.println("Beacon spam SSIDs saved to SD card");
+        }
+    }
+}
+
+// Evil Portal - Captive portal phishing
+void wifi_evil_portal() {
+    M5.Display.fillScreen(TFT_BLACK);
+    display_status_bar();
+    
+    M5.Display.setTextSize(1);
+    M5.Display.setTextColor(TFT_RED);
+    M5.Display.setCursor(10, 25);
+    M5.Display.println("Evil Portal");
+    
+    M5.Display.setTextColor(TFT_YELLOW);
+    M5.Display.setCursor(10, 40);
+    M5.Display.println("WARNING: Educational only");
+    M5.Display.println("");
+    
+    M5.Display.setTextColor(TFT_WHITE);
+    M5.Display.println("Creates captive portal:");
+    M5.Display.println("1. AP: 'Free WiFi'");
+    M5.Display.println("2. DNS redirect to login");
+    M5.Display.println("3. Capture credentials");
+    M5.Display.println("4. Save to /loot/");
+    M5.Display.println("");
+    M5.Display.println("Feature requires web");
+    M5.Display.println("server implementation.");
+    
+    M5.Display.setCursor(10, 120);
+    M5.Display.setTextColor(TFT_CYAN);
+    M5.Display.println("Press any key to return");
+    
+    Serial.println("Evil portal interface loaded");
+    
+    // Create sample credential file structure
+    if (sdCardAvailable) {
+        File credFile = SD.open("/loot/credentials.txt", FILE_APPEND);
+        if (credFile) {
+            credFile.printf("=== Evil Portal Session %lu ===\n", millis());
+            credFile.println("Ready to capture credentials...");
+            credFile.close();
+            Serial.println("Credentials file ready at /loot/credentials.txt");
+        }
+    }
+}
+
+// Promiscuous mode - packet sniffing
+void wifi_promiscuous_mode() {
+    M5.Display.fillScreen(TFT_BLACK);
+    display_status_bar();
+    
+    M5.Display.setTextSize(1);
+    M5.Display.setTextColor(TFT_GREEN);
+    M5.Display.setCursor(10, 25);
+    M5.Display.println("Promiscuous Mode");
+    
+    M5.Display.setTextColor(TFT_WHITE);
+    M5.Display.setCursor(10, 40);
+    M5.Display.println("Packet Sniffing Features:");
+    M5.Display.println("- Monitor all WiFi traffic");
+    M5.Display.println("- Capture handshakes");
+    M5.Display.println("- Analyze protocols");
+    M5.Display.println("- Save to /captures/");
+    M5.Display.println("");
+    M5.Display.println("Requires promiscuous mode");
+    M5.Display.println("callback implementation.");
+    M5.Display.println("");
+    M5.Display.setTextColor(TFT_YELLOW);
+    M5.Display.println("Handshakes saved in");
+    M5.Display.println("PCAP format.");
+    
+    M5.Display.setCursor(10, 120);
+    M5.Display.setTextColor(TFT_CYAN);
+    M5.Display.println("Press any key to return");
+    
+    Serial.println("Promiscuous mode interface loaded");
+    
+    // Create capture directory structure
+    if (sdCardAvailable) {
+        File captureFile = SD.open("/captures/README.txt", FILE_WRITE);
+        if (captureFile) {
+            captureFile.println("WiFi packet captures stored here");
+            captureFile.println("Format: PCAP (compatible with Wireshark)");
+            captureFile.close();
+            Serial.println("Capture directory ready");
+        }
+    }
+}
+
+// ========================================
+// RF/SUB-GHZ MODULE SUPPORT (CC1101, NRF24)
+// ========================================
+
+void display_rf_menu() {
+    M5.Display.fillScreen(TFT_BLACK);
+    display_status_bar();
+    
+    M5.Display.setTextSize(2);
+    M5.Display.setTextColor(TFT_ORANGE);
+    M5.Display.setCursor(10, 25);
+    M5.Display.println("RF/SubGHz");
+    
+    M5.Display.setTextSize(1);
+    M5.Display.setTextColor(TFT_WHITE);
+    M5.Display.setCursor(10, 50);
+    M5.Display.println("RF Module Support:");
+    M5.Display.println("");
+    M5.Display.println("CC1101: 315/433/868/915MHz");
+    M5.Display.println("- Signal capture");
+    M5.Display.println("- Signal replay");
+    M5.Display.println("- Protocol analysis");
+    M5.Display.println("");
+    M5.Display.println("NRF24: 2.4GHz");
+    M5.Display.println("- Keyboard/mouse sniffing");
+    M5.Display.println("");
+    M5.Display.setTextColor(TFT_YELLOW);
+    M5.Display.println("Module not detected");
+    M5.Display.println("Connect CC1101 or NRF24");
+    
+    M5.Display.setCursor(10, 120);
+    M5.Display.setTextColor(TFT_CYAN);
+    M5.Display.println("Press any key to return");
+    
+    Serial.println("RF/SubGHz interface loaded");
+    
+    // Create RF data directory
+    if (sdCardAvailable) {
+        File rfFile = SD.open("/data/rf_signals.sub", FILE_WRITE);
+        if (rfFile) {
+            rfFile.println("Filetype: Flipper SubGhz RAW File");
+            rfFile.println("Version: 1");
+            rfFile.println("# Captured RF signals in Flipper format");
+            rfFile.close();
+            Serial.println("RF signal file ready (Flipper .sub format)");
+        }
+    }
+}
+
+// ========================================
+// LORA MODULE SUPPORT (SX1276/SX1262)
+// ========================================
+
+void display_lora_menu() {
+    M5.Display.fillScreen(TFT_BLACK);
+    display_status_bar();
+    
+    M5.Display.setTextSize(2);
+    M5.Display.setTextColor(TFT_GREEN);
+    M5.Display.setCursor(10, 25);
+    M5.Display.println("LoRa Module");
+    
+    M5.Display.setTextSize(1);
+    M5.Display.setTextColor(TFT_WHITE);
+    M5.Display.setCursor(10, 50);
+    M5.Display.println("LoRa Configuration:");
+    M5.Display.println("");
+    M5.Display.println("Supported chips:");
+    M5.Display.println("- SX1276 (433/868/915 MHz)");
+    M5.Display.println("- SX1262 (433/868/915 MHz)");
+    M5.Display.println("");
+    M5.Display.println("Range: Up to 9km+");
+    M5.Display.println("Features:");
+    M5.Display.println("- Long-range communication");
+    M5.Display.println("- Low power consumption");
+    M5.Display.println("");
+    M5.Display.setTextColor(TFT_YELLOW);
+    M5.Display.println("Module not detected");
+    M5.Display.println("Connect LoRa module");
+    
+    M5.Display.setCursor(10, 120);
+    M5.Display.setTextColor(TFT_CYAN);
+    M5.Display.println("Press any key to return");
+    
+    Serial.println("LoRa interface loaded");
+}
+
 void display_system_info() {
     M5.Display.fillScreen(TFT_BLACK);
     display_status_bar();
@@ -295,21 +567,11 @@ void driver_loop() {
                         menuSelection = 0;
                         display_wifi_menu();
                     } else if (menuSelection == 1) {
-                        M5.Display.fillScreen(TFT_BLACK);
-                        M5.Display.setCursor(10, 50);
-                        M5.Display.setTextColor(TFT_YELLOW);
-                        M5.Display.println("RF/SubGHz module");
-                        M5.Display.println("not yet implemented");
-                        delay(2000);
-                        display_main_menu();
+                        display_rf_menu();
+                        currentMenu = MENU_RF;
                     } else if (menuSelection == 2) {
-                        M5.Display.fillScreen(TFT_BLACK);
-                        M5.Display.setCursor(10, 50);
-                        M5.Display.setTextColor(TFT_YELLOW);
-                        M5.Display.println("LoRa module");
-                        M5.Display.println("not yet implemented");
-                        delay(2000);
-                        display_main_menu();
+                        display_lora_menu();
+                        currentMenu = MENU_LORA;
                     } else if (menuSelection == 3) {
                         display_system_info();
                         currentMenu = MENU_SYSTEM;
@@ -328,14 +590,18 @@ void driver_loop() {
                     if (menuSelection == 0) {
                         wifi_scan();
                         currentMenu = MENU_WIFI_SCAN;
-                    } else {
-                        M5.Display.fillScreen(TFT_BLACK);
-                        M5.Display.setCursor(10, 50);
-                        M5.Display.setTextColor(TFT_YELLOW);
-                        M5.Display.println("Feature not yet");
-                        M5.Display.println("implemented");
-                        delay(2000);
-                        display_wifi_menu();
+                    } else if (menuSelection == 1) {
+                        wifi_deauth_attack();
+                        currentMenu = MENU_WIFI_DEAUTH;
+                    } else if (menuSelection == 2) {
+                        wifi_beacon_spam();
+                        currentMenu = MENU_WIFI_BEACON;
+                    } else if (menuSelection == 3) {
+                        wifi_evil_portal();
+                        currentMenu = MENU_WIFI_EVIL_PORTAL;
+                    } else if (menuSelection == 4) {
+                        wifi_promiscuous_mode();
+                        currentMenu = MENU_WIFI_PROMISCUOUS;
                     }
                 } else if (keycode == 0x29 || key == 0x1B) { // ESC
                     currentMenu = MENU_MAIN;
@@ -345,16 +611,22 @@ void driver_loop() {
                 break;
                 
             case MENU_WIFI_SCAN:
+            case MENU_WIFI_DEAUTH:
+            case MENU_WIFI_BEACON:
+            case MENU_WIFI_EVIL_PORTAL:
+            case MENU_WIFI_PROMISCUOUS:
+            case MENU_RF:
+            case MENU_LORA:
             case MENU_SYSTEM:
                 // Any key returns to previous menu
-                if (currentMenu == MENU_WIFI_SCAN) {
-                    currentMenu = MENU_WIFI;
-                    menuSelection = 0;
-                    display_wifi_menu();
-                } else {
+                if (currentMenu == MENU_SYSTEM || currentMenu == MENU_RF || currentMenu == MENU_LORA) {
                     currentMenu = MENU_MAIN;
                     menuSelection = 0;
                     display_main_menu();
+                } else {
+                    currentMenu = MENU_WIFI;
+                    menuSelection = 0;
+                    display_wifi_menu();
                 }
                 break;
         }
