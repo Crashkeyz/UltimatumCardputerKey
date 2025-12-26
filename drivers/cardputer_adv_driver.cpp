@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <M5Unified.h>
+#include "cardputer_adv_driver.h"
 
 void initialize_driver() {
     Serial.println("Initializing Cardputer ADV driver...");

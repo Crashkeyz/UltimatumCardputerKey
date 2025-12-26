@@ -1,9 +1,7 @@
 #include <Arduino.h>
 #include <M5Unified.h>
 #include <M5GFX.h>
-
-// Forward declarations
-void initialize_driver();
+#include "../drivers/cardputer_adv_driver.h"
 
 void setup() {
     // Initialize USB Serial for debugging
