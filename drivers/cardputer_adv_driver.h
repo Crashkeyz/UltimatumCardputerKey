@@ -1,9 +1,7 @@
 #ifndef CARDPUTER_ADV_DRIVER_H
 #define CARDPUTER_ADV_DRIVER_H
 
-#include <SD.h>
-#include <FS.h>
-
+// Forward declarations - actual includes in .cpp file
 void initialize_driver();
 bool initialize_sd_card();
 
