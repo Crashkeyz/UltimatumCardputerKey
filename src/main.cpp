@@ -17,6 +17,7 @@ uint64_t sdTotalSpace = 0;
 
 // Constants for better readability
 const uint64_t MB_DIVISOR = 1024 * 1024;
+const uint64_t KB_DIVISOR = 1024;
 
 /**
  * Initialize SD card storage system
@@ -102,7 +103,7 @@ void testSDWrite() {
     
     String testData = "Hello from M5Stack Cardputer!\n";
     testData += "Timestamp: " + String(millis()) + " ms\n";
-    testData += "Free space: " + String(sdFreeSpace / 1024) + " KB\n";
+    testData += "Free space: " + String(sdFreeSpace / KB_DIVISOR) + " KB\n";
     
     if (storage.writeFile("/data/test.txt", testData.c_str())) {
         Serial.println("[Test] Test file written successfully");

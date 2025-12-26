@@ -103,9 +103,9 @@ size_t SDLogger::getLogSize() {
 }
 
 String SDLogger::getTimestamp() {
-    // Simple timestamp using millis()
-    // Note: millis() wraps around after ~49.7 days
-    // For production use, consider using RTC for accurate timestamps
+    // Timestamp using millis() with day counter to handle overflow
+    // millis() wraps around after ~49.7 days, so we track days separately
+    // For production use with accurate dates/times, consider using RTC
     unsigned long ms = millis();
     unsigned long seconds = ms / 1000;
     unsigned long minutes = seconds / 60;

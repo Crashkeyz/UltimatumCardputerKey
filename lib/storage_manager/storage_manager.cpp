@@ -328,8 +328,7 @@ bool StorageManager::listDir(const char* path, bool recursive) {
 
 void StorageManager::listDirRecursive(File dir, int numTabs) {
     // Limit recursion depth to prevent stack overflow
-    const int MAX_DEPTH = 10;
-    if (numTabs > MAX_DEPTH) {
+    if (numTabs > MAX_RECURSION_DEPTH) {
         Serial.println("  [Max depth reached]");
         return;
     }

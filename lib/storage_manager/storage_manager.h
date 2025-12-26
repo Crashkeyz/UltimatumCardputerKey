@@ -156,6 +156,7 @@ private:
     
     /**
      * Helper function to recursively list directory contents
+     * Maximum depth limited to prevent stack overflow
      */
     void listDirRecursive(File dir, int numTabs);
     
@@ -163,6 +164,9 @@ private:
      * Helper function to set error message
      */
     void setError(const String& error);
+    
+    // Constants
+    static const int MAX_RECURSION_DEPTH = 10;
 };
 
 #endif // STORAGE_MANAGER_H

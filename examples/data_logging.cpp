@@ -14,6 +14,9 @@
 
 StorageManager storage;
 
+// Constants for size conversions
+const uint64_t MB_DIVISOR = 1024 * 1024;
+
 // Simulated sensor readings
 float getTemperature() {
     return 20.0 + random(-50, 50) / 10.0;  // 15-25°C
@@ -55,8 +58,8 @@ void logSensorData() {
 }
 
 void checkStorageSpace() {
-    uint64_t freeMB = storage.getFreeSpace() / (1024 * 1024);
-    uint64_t totalMB = storage.getTotalSpace() / (1024 * 1024);
+    uint64_t freeMB = storage.getFreeSpace() / MB_DIVISOR;
+    uint64_t totalMB = storage.getTotalSpace() / MB_DIVISOR;
     
     Serial.printf("Storage: %llu MB free / %llu MB total\n", freeMB, totalMB);
     
