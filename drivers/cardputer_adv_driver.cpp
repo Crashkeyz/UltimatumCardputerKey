@@ -8,9 +8,13 @@
 bool initialize_sd_card() {
     Serial.println("Initializing SD card...");
     
-    // M5Unified may handle SD card initialization automatically
-    // Try to access the SD card through M5's interface first
-    if (!SD.begin()) {
+    // M5Unified handles SD card initialization for M5Stack devices
+    // We need to initialize M5 before accessing SD card
+    // The SD card is accessed through the standard SD library after M5.begin()
+    
+    // Try to mount SD card with default settings
+    // M5Unified configures the pins automatically for M5Stack devices
+    if (!SD.begin(GPIO_NUM_4, SPI, 25000000)) {
         Serial.println("SD Card mount failed or not present");
         Serial.println("Note: Insert SD card and restart if you want to use external storage");
         return false;
