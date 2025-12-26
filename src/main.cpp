@@ -37,21 +37,8 @@ void setup() {
 }
 
 void loop() {
-    // Update M5Unified state (keyboard, power, etc)
-    M5.update();
-    
-    // Example: Read keyboard input
-    if (M5.Keyboard.isChange()) {
-        if (M5.Keyboard.isPressed()) {
-            auto keycode = M5.Keyboard.getKeyCode();
-            Serial.printf("Key pressed: 0x%02X\n", keycode);
-            
-            // Display key on screen
-            M5.Display.fillRect(0, 60, 240, 30, BLACK);
-            M5.Display.setCursor(10, 60);
-            M5.Display.printf("Key: 0x%02X", keycode);
-        }
-    }
+    // Call the driver loop which handles all UI and functionality
+    driver_loop();
     
     delay(10);
 }

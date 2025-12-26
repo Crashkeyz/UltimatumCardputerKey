@@ -3,6 +3,7 @@
 
 // Forward declarations - actual includes in .cpp file
 void initialize_driver();
+void driver_loop();
 bool initialize_sd_card();
 
 #endif // CARDPUTER_ADV_DRIVER_H
