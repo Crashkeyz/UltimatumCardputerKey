@@ -16,6 +16,8 @@ uint64_t sdFreeSpace = 0;
 uint64_t sdTotalSpace = 0;
 
 // Constants for better readability
+// Note: These are defined here for module independence. The storage_manager
+// also defines MB_DIVISOR internally for its own use.
 const uint64_t MB_DIVISOR = 1024 * 1024;
 const uint64_t KB_DIVISOR = 1024;
 

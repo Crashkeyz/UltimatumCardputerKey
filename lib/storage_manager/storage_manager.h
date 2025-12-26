@@ -156,7 +156,7 @@ private:
     
     /**
      * Helper function to recursively list directory contents
-     * Maximum depth limited to prevent stack overflow
+     * Maximum depth limited to MAX_RECURSION_DEPTH (10 levels) to prevent stack overflow
      */
     void listDirRecursive(File dir, int numTabs);
     

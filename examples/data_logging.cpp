@@ -15,6 +15,7 @@
 StorageManager storage;
 
 // Constants for size conversions
+// Note: Defined here for example independence
 const uint64_t MB_DIVISOR = 1024 * 1024;
 
 // Simulated sensor readings
