@@ -5,16 +5,18 @@
 #include <SPI.h>
 #include "cardputer_adv_driver.h"
 
+// SD Card configuration for M5Stack Cardputer
+#define SD_CS_PIN GPIO_NUM_4
+#define SD_SPI_FREQ 25000000  // 25MHz
+
 bool initialize_sd_card() {
     Serial.println("Initializing SD card...");
     
-    // M5Unified handles SD card initialization for M5Stack devices
-    // We need to initialize M5 before accessing SD card
-    // The SD card is accessed through the standard SD library after M5.begin()
+    // Note: This function should be called after M5.begin() in setup()
+    // M5Unified configures the SPI pins automatically for M5Stack devices
     
-    // Try to mount SD card with default settings
-    // M5Unified configures the pins automatically for M5Stack devices
-    if (!SD.begin(GPIO_NUM_4, SPI, 25000000)) {
+    // Try to mount SD card with explicit CS pin and frequency
+    if (!SD.begin(SD_CS_PIN, SPI, SD_SPI_FREQ)) {
         Serial.println("SD Card mount failed or not present");
         Serial.println("Note: Insert SD card and restart if you want to use external storage");
         return false;
@@ -58,6 +60,7 @@ void initialize_driver() {
     
     // Initialize SD card for external storage
     // This reduces flash memory usage by storing data externally
+    // NOTE: M5.begin() must be called before this function
     if (initialize_sd_card()) {
         Serial.println("SD card available for data storage");
         Serial.println("Use SD card to store large files and reduce flash memory usage");
