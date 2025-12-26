@@ -104,19 +104,26 @@ size_t SDLogger::getLogSize() {
 
 String SDLogger::getTimestamp() {
     // Simple timestamp using millis()
-    // In a real implementation, use RTC for accurate timestamps
+    // Note: millis() wraps around after ~49.7 days
+    // For production use, consider using RTC for accurate timestamps
     unsigned long ms = millis();
     unsigned long seconds = ms / 1000;
     unsigned long minutes = seconds / 60;
     unsigned long hours = minutes / 60;
+    unsigned long days = hours / 24;
     
     seconds = seconds % 60;
     minutes = minutes % 60;
     hours = hours % 24;
     
     char timestamp[32];
-    snprintf(timestamp, sizeof(timestamp), "%02lu:%02lu:%02lu.%03lu", 
-             hours, minutes, seconds, ms % 1000);
+    if (days > 0) {
+        snprintf(timestamp, sizeof(timestamp), "D%lu:%02lu:%02lu:%02lu.%03lu", 
+                 days, hours, minutes, seconds, ms % 1000);
+    } else {
+        snprintf(timestamp, sizeof(timestamp), "%02lu:%02lu:%02lu.%03lu", 
+                 hours, minutes, seconds, ms % 1000);
+    }
     
     return String(timestamp);
 }

@@ -15,6 +15,9 @@ String sdCardStatus = "CHECKING...";
 uint64_t sdFreeSpace = 0;
 uint64_t sdTotalSpace = 0;
 
+// Constants for better readability
+const uint64_t MB_DIVISOR = 1024 * 1024;
+
 /**
  * Initialize SD card storage system
  */
@@ -65,8 +68,8 @@ void displaySDStatus() {
         
         // Display storage info
         M5.Display.setCursor(10, 100);
-        uint64_t freeMB = sdFreeSpace / (1024 * 1024);
-        uint64_t totalMB = sdTotalSpace / (1024 * 1024);
+        uint64_t freeMB = sdFreeSpace / MB_DIVISOR;
+        uint64_t totalMB = sdTotalSpace / MB_DIVISOR;
         M5.Display.printf("Free: %llu MB / %llu MB", freeMB, totalMB);
         
         // Display card type

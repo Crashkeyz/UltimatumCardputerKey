@@ -1,5 +1,8 @@
 #include "storage_manager.h"
 
+// Constants for size conversions
+const uint64_t MB_DIVISOR = 1024 * 1024;
+
 StorageManager::StorageManager() : _initialized(false), _cardPresent(false), _lastError("") {
 }
 
@@ -40,11 +43,11 @@ bool StorageManager::begin() {
         Serial.println("UNKNOWN");
     }
     
-    uint64_t cardSize = SD.cardSize() / (1024 * 1024);
+    uint64_t cardSize = SD.cardSize() / MB_DIVISOR;
     Serial.printf("[Storage] SD card size: %llu MB\n", cardSize);
-    Serial.printf("[Storage] Total space: %llu MB\n", SD.totalBytes() / (1024 * 1024));
-    Serial.printf("[Storage] Used space: %llu MB\n", SD.usedBytes() / (1024 * 1024));
-    Serial.printf("[Storage] Free space: %llu MB\n", (SD.totalBytes() - SD.usedBytes()) / (1024 * 1024));
+    Serial.printf("[Storage] Total space: %llu MB\n", SD.totalBytes() / MB_DIVISOR);
+    Serial.printf("[Storage] Used space: %llu MB\n", SD.usedBytes() / MB_DIVISOR);
+    Serial.printf("[Storage] Free space: %llu MB\n", (SD.totalBytes() - SD.usedBytes()) / MB_DIVISOR);
     
     Serial.println("[Storage] SD card initialized successfully");
     return true;
@@ -165,9 +168,25 @@ bool StorageManager::readFile(const char* path, String& data) {
         return false;
     }
     
+    // Get file size and pre-allocate string
+    size_t fileSize = file.size();
+    if (fileSize > 0) {
+        data.reserve(fileSize + 1);
+    }
+    
+    // Read in chunks for better performance
+    const size_t CHUNK_SIZE = 512;
+    char buffer[CHUNK_SIZE];
     data = "";
+    
     while (file.available()) {
-        data += (char)file.read();
+        size_t bytesToRead = min((size_t)file.available(), CHUNK_SIZE);
+        size_t bytesRead = file.read((uint8_t*)buffer, bytesToRead);
+        if (bytesRead > 0) {
+            data.concat(buffer, bytesRead);
+        } else {
+            break;
+        }
     }
     file.close();
     
@@ -308,6 +327,13 @@ bool StorageManager::listDir(const char* path, bool recursive) {
 }
 
 void StorageManager::listDirRecursive(File dir, int numTabs) {
+    // Limit recursion depth to prevent stack overflow
+    const int MAX_DEPTH = 10;
+    if (numTabs > MAX_DEPTH) {
+        Serial.println("  [Max depth reached]");
+        return;
+    }
+    
     while (true) {
         File entry = dir.openNextFile();
         if (!entry) {
