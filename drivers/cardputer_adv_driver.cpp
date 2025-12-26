@@ -5,22 +5,14 @@
 #include <SPI.h>
 #include "cardputer_adv_driver.h"
 
-// SD Card pins for M5Stack Cardputer
-// The Cardputer uses the built-in SD card slot
-#define SD_SPI_SCK_PIN  36
-#define SD_SPI_MISO_PIN 35
-#define SD_SPI_MOSI_PIN 37
-#define SD_SPI_CS_PIN   4
-
 bool initialize_sd_card() {
     Serial.println("Initializing SD card...");
     
-    // Initialize SPI for SD card
-    SPI.begin(SD_SPI_SCK_PIN, SD_SPI_MISO_PIN, SD_SPI_MOSI_PIN, SD_SPI_CS_PIN);
-    
-    // Try to mount SD card
-    if (!SD.begin(SD_SPI_CS_PIN, SPI, 25000000)) {
+    // M5Unified may handle SD card initialization automatically
+    // Try to access the SD card through M5's interface first
+    if (!SD.begin()) {
         Serial.println("SD Card mount failed or not present");
+        Serial.println("Note: Insert SD card and restart if you want to use external storage");
         return false;
     }
     
@@ -61,11 +53,13 @@ void initialize_driver() {
     Serial.println("Initializing Cardputer ADV driver...");
     
     // Initialize SD card for external storage
+    // This reduces flash memory usage by storing data externally
     if (initialize_sd_card()) {
         Serial.println("SD card available for data storage");
         Serial.println("Use SD card to store large files and reduce flash memory usage");
     } else {
         Serial.println("SD card not available - using internal flash only");
+        Serial.println("To use SD card: Insert card and restart device");
     }
     
     // Add your custom driver initialization here

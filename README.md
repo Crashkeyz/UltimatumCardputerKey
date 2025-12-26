@@ -45,6 +45,8 @@ To avoid running out of flash memory:
 
 ## Build & Flash
 
+**📖 For detailed SD card setup instructions, see [docs/SD_CARD_SETUP.md](docs/SD_CARD_SETUP.md)**
+
 ### Using PlatformIO CLI
 ```bash
 # Install PlatformIO
