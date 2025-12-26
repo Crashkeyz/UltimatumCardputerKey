@@ -6,5 +6,6 @@
 
 void initialize_driver();
 bool initialize_sd_card();
+void driver_loop();
 
 #endif // CARDPUTER_ADV_DRIVER_H

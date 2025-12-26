@@ -5,26 +5,30 @@
 #include <SPI.h>
 #include "cardputer_adv_driver.h"
 
-// SD Card configuration for M5Stack Cardputer
+// SD Card configuration for M5Stack Cardputer ADV
 #define SD_CS_PIN GPIO_NUM_4
+#define SD_SCK_PIN GPIO_NUM_40
+#define SD_MISO_PIN GPIO_NUM_39
+#define SD_MOSI_PIN GPIO_NUM_14
 #define SD_SPI_FREQ 25000000  // 25MHz
 
 bool initialize_sd_card() {
     Serial.println("Initializing SD card...");
     
-    // Note: This function should be called after M5.begin() in setup()
-    // M5Unified configures the SPI pins automatically for M5Stack devices
+    // Create dedicated SPI bus for SD card (HSPI)
+    SPIClass sdcardSPI(HSPI);
+    sdcardSPI.begin(SD_SCK_PIN, SD_MISO_PIN, SD_MOSI_PIN, SD_CS_PIN);
     
-    // Try to mount SD card with explicit CS pin and frequency
-    if (!SD.begin(SD_CS_PIN, SPI, SD_SPI_FREQ)) {
-        Serial.println("SD Card mount failed or not present");
+    // Try to mount SD card with dedicated SPI bus
+    if (!SD.begin(SD_CS_PIN, sdcardSPI, SD_SPI_FREQ)) {
+        Serial.println("❌ SD Card mount failed or not present");
         Serial.println("Note: Insert SD card and restart if you want to use external storage");
         return false;
     }
     
     uint8_t cardType = SD.cardType();
     if (cardType == CARD_NONE) {
-        Serial.println("No SD card attached");
+        Serial.println("❌ No SD card attached");
         return false;
     }
     
@@ -45,13 +49,21 @@ bool initialize_sd_card() {
     Serial.printf("Total space: %lluMB\n", SD.totalBytes() / (1024 * 1024));
     Serial.printf("Used space: %lluMB\n", SD.usedBytes() / (1024 * 1024));
     
-    // Create data directory if it doesn't exist
-    if (!SD.exists("/data")) {
-        SD.mkdir("/data");
-        Serial.println("Created /data directory on SD card");
+    // Create folder structure on SD card
+    const char* folders[] = {"/data", "/keys", "/logs", "/captures", "/loot", "/firmware"};
+    for (int i = 0; i < 6; i++) {
+        if (!SD.exists(folders[i])) {
+            if (SD.mkdir(folders[i])) {
+                Serial.printf("✅ Created %s directory on SD card\n", folders[i]);
+            } else {
+                Serial.printf("⚠️  Failed to create %s directory\n", folders[i]);
+            }
+        } else {
+            Serial.printf("✓ %s directory already exists\n", folders[i]);
+        }
     }
     
-    Serial.println("SD card initialized successfully");
+    Serial.println("✅ SD CARD READY");
     return true;
 }
 
@@ -62,17 +74,18 @@ void initialize_driver() {
     // This reduces flash memory usage by storing data externally
     // NOTE: M5.begin() must be called before this function
     if (initialize_sd_card()) {
-        Serial.println("SD card available for data storage");
+        Serial.println("✅ SD card available for data storage");
         Serial.println("Use SD card to store large files and reduce flash memory usage");
     } else {
-        Serial.println("SD card not available - using internal flash only");
+        Serial.println("⚠️  SD card not available - using internal flash only");
         Serial.println("To use SD card: Insert card and restart device");
     }
     
-    // Add your custom driver initialization here
-    // Examples:
-    // - WiFi setup
-    // - Custom peripheral initialization
-    
-    Serial.println("Driver initialized successfully");
+    Serial.println("✅ Driver initialized successfully");
 }
+
+void driver_loop() {
+    // Placeholder for menu system and continuous operation
+    // This can be expanded to handle menu navigation, SD card operations, etc.
+}
+
