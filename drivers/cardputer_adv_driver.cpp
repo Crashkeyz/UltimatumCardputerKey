@@ -12,11 +12,13 @@
 #define SD_MOSI_PIN GPIO_NUM_14
 #define SD_SPI_FREQ 25000000  // 25MHz
 
+// Global SPI bus instance for SD card
+static SPIClass sdcardSPI(HSPI);
+
 bool initialize_sd_card() {
     Serial.println("Initializing SD card...");
     
-    // Create dedicated SPI bus for SD card (HSPI)
-    SPIClass sdcardSPI(HSPI);
+    // Initialize dedicated SPI bus for SD card (HSPI)
     sdcardSPI.begin(SD_SCK_PIN, SD_MISO_PIN, SD_MOSI_PIN, SD_CS_PIN);
     
     // Try to mount SD card with dedicated SPI bus
@@ -51,7 +53,8 @@ bool initialize_sd_card() {
     
     // Create folder structure on SD card
     const char* folders[] = {"/data", "/keys", "/logs", "/captures", "/loot", "/firmware"};
-    for (int i = 0; i < 6; i++) {
+    const int folderCount = sizeof(folders) / sizeof(folders[0]);
+    for (int i = 0; i < folderCount; i++) {
         if (!SD.exists(folders[i])) {
             if (SD.mkdir(folders[i])) {
                 Serial.printf("✅ Created %s directory on SD card\n", folders[i]);
