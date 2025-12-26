@@ -159,7 +159,7 @@ void display_main_menu() {
         "4. System Info"
     };
     
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < MAIN_MENU_ITEMS; i++) {
         M5.Display.setCursor(10, 50 + i * 15);
         if (i == menuSelection) {
             M5.Display.setTextColor(TFT_YELLOW);
@@ -197,7 +197,7 @@ void display_wifi_menu() {
         "5. Promiscuous Mode"
     };
     
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < WIFI_MENU_ITEMS; i++) {
         M5.Display.setCursor(10, 50 + i * 12);
         if (i == menuSelection) {
             M5.Display.setTextColor(TFT_YELLOW);
