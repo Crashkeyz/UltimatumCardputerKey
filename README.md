@@ -2,6 +2,17 @@
 
 Firmware for M5Stack Cardputer ADV (ESP32-S3)
 
+## 🚀 Bruce Firmware Sideload Support
+
+**NEW:** This firmware can now be loaded as a sideloadable application through Bruce Firmware! 
+
+- Run Ultimatum firmware without replacing your base firmware
+- Easy installation via SD card
+- Switch between firmwares on the fly
+
+**📖 Quick Start:** [3-Step Installation Guide](docs/QUICK_START_BRUCE.md)  
+**📖 Full Guide:** [Complete Sideload Documentation](docs/BRUCE_FIRMWARE_SIDELOAD.md)
+
 ## Which Branch to Use?
 
 **Use the `copilot/optimize-flashing-to-sd-card` branch for the latest stable version with SD card support and optimized memory usage.**
@@ -46,6 +57,19 @@ To avoid running out of flash memory:
 ## Build & Flash
 
 **📖 For detailed SD card setup instructions, see [docs/SD_CARD_SETUP.md](docs/SD_CARD_SETUP.md)**
+
+### Installation Options
+
+**Option 1: Sideload via Bruce Firmware (Recommended for Testing)**
+- No need to replace your existing firmware
+- Easy to switch between firmwares
+- Keep Bruce Firmware as your base system
+- **📖 [Complete Sideload Guide](docs/BRUCE_FIRMWARE_SIDELOAD.md)**
+
+**Option 2: Direct Flash (Standalone)**
+- Replace existing firmware completely
+- Full control over the device
+- Use instructions below
 
 ### Using PlatformIO CLI
 ```bash

@@ -1,0 +1,33 @@
+{
+  "name": "Ultimatum Cardputer",
+  "version": "1.0.0",
+  "description": "Advanced firmware for M5Stack Cardputer with SD card support and optimized memory management",
+  "author": "Crashkeyz",
+  "device": "M5Stack Cardputer",
+  "mcu": "ESP32-S3",
+  "binary": "firmware.bin",
+  "partition": "default_16MB.csv",
+  "flash_size": "16MB",
+  "requirements": {
+    "flash": "16MB",
+    "psram": "8MB",
+    "sd_card": "recommended"
+  },
+  "features": [
+    "M5Unified library integration",
+    "SD card support for external storage",
+    "Optimized partition scheme",
+    "OTA update capability",
+    "USB CDC serial debugging",
+    "Full keyboard support",
+    "LCD display control"
+  ],
+  "installation": {
+    "method": "sideload",
+    "compatible_loaders": [
+      "Bruce Firmware"
+    ]
+  },
+  "github": "https://github.com/Crashkeyz/UltimatumCardputerKey",
+  "license": "See LICENSE file"
+}
