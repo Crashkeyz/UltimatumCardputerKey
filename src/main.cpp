@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <M5Unified.h>
 #include <M5GFX.h>
+#include <M5Cardputer.h>
 #include "../drivers/cardputer_adv_driver.h"
 
 void setup() {
@@ -39,6 +40,9 @@ void setup() {
 void loop() {
     // Update M5Unified state (keyboard, power, etc)
     M5.update();
+    
+    // Call driver loop for menu system and continuous operation
+    driver_loop();
     
     // Example: Read keyboard input
     if (M5.Keyboard.isChange()) {
