@@ -1,0 +1,267 @@
+name: Build and Package for Bruce Firmware
+
+on:
+  push:
+    branches: [ main, copilot/add-sideload-access-firmware ]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-and-package:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Cache PlatformIO
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.platformio
+            .pio
+          key: ${{ runner.os }}-pio-${{ hashFiles('**/platformio.ini') }}
+          restore-keys: |
+            ${{ runner.os }}-pio-
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install PlatformIO
+        run: |
+          python -m pip install --upgrade pip
+          pip install platformio
+      
+      - name: Build Firmware
+        run: |
+          pio run -e m5stack-cardputer
+      
+      - name: Create Bruce Firmware Package
+        run: |
+          # Create packaging directory
+          mkdir -p bruce-package/ultimatum
+          
+          # Copy firmware binary
+          cp .pio/build/m5stack-cardputer/firmware.bin bruce-package/ultimatum/
+          
+          # Copy manifest file
+          cp bruce_manifest.json bruce-package/ultimatum/manifest.json
+          
+          # Copy partition table
+          cp default_16MB.csv bruce-package/ultimatum/
+          
+          # Create README for the package
+          cat > bruce-package/ultimatum/README.txt << 'EOF'
+          Ultimatum Cardputer Firmware - Bruce Firmware Sideload Package
+          ================================================================
+          
+          Installation Instructions:
+          1. Copy the entire "ultimatum" folder to your SD card's "firmware" directory
+          2. Full path should be: SD:/firmware/ultimatum/
+          3. Insert SD card into your M5Stack Cardputer running Bruce Firmware
+          4. Navigate to sideload/apps menu in Bruce Firmware
+          5. Select "Ultimatum Cardputer" to load
+          
+          For detailed instructions, visit:
+          https://github.com/Crashkeyz/UltimatumCardputerKey/blob/main/docs/BRUCE_FIRMWARE_SIDELOAD.md
+          
+          Files included:
+          - firmware.bin: Main firmware binary
+          - manifest.json: Metadata for Bruce Firmware
+          - default_16MB.csv: Partition table
+          - README.txt: This file
+          EOF
+          
+          # Create installation script for users
+          cat > bruce-package/install.sh << 'EOF'
+          #!/bin/bash
+          # Installation script for Bruce Firmware sideload
+          
+          echo "Ultimatum Cardputer - Bruce Firmware Sideload Installer"
+          echo "========================================================"
+          echo ""
+          
+          # Check if SD card path is provided
+          if [ -z "$1" ]; then
+              echo "Usage: ./install.sh /path/to/sdcard"
+              echo "Example: ./install.sh /Volumes/SDCARD"
+              echo "Example: ./install.sh /media/user/SDCARD"
+              exit 1
+          fi
+          
+          SD_PATH="$1"
+          FIRMWARE_DIR="$SD_PATH/firmware"
+          
+          # Check if SD card path exists
+          if [ ! -d "$SD_PATH" ]; then
+              echo "Error: SD card path not found: $SD_PATH"
+              exit 1
+          fi
+          
+          # Create firmware directory if it doesn't exist
+          mkdir -p "$FIRMWARE_DIR"
+          
+          # Copy ultimatum folder
+          echo "Copying firmware files to $FIRMWARE_DIR/ultimatum..."
+          cp -r ultimatum "$FIRMWARE_DIR/"
+          
+          if [ $? -eq 0 ]; then
+              echo ""
+              echo "✓ Installation successful!"
+              echo ""
+              echo "Next steps:"
+              echo "1. Safely eject your SD card"
+              echo "2. Insert it into your M5Stack Cardputer"
+              echo "3. Boot Bruce Firmware"
+              echo "4. Navigate to the sideload/apps menu"
+              echo "5. Select 'Ultimatum Cardputer'"
+              echo ""
+              echo "For more information, see ultimatum/README.txt"
+          else
+              echo "✗ Installation failed"
+              exit 1
+          fi
+          EOF
+          
+          chmod +x bruce-package/install.sh
+          
+          # Create Windows batch script
+          cat > bruce-package/install.bat << 'EOF'
+          @echo off
+          REM Installation script for Bruce Firmware sideload (Windows)
+          
+          echo Ultimatum Cardputer - Bruce Firmware Sideload Installer
+          echo ========================================================
+          echo.
+          
+          if "%~1"=="" (
+              echo Usage: install.bat DRIVE_LETTER:
+              echo Example: install.bat E:
+              echo.
+              echo Please provide your SD card drive letter
+              pause
+              exit /b 1
+          )
+          
+          set SD_PATH=%~1
+          set FIRMWARE_DIR=%SD_PATH%\firmware
+          
+          if not exist "%SD_PATH%" (
+              echo Error: SD card path not found: %SD_PATH%
+              pause
+              exit /b 1
+          )
+          
+          if not exist "%FIRMWARE_DIR%" mkdir "%FIRMWARE_DIR%"
+          
+          echo Copying firmware files to %FIRMWARE_DIR%\ultimatum...
+          xcopy /E /I /Y ultimatum "%FIRMWARE_DIR%\ultimatum"
+          
+          if %ERRORLEVEL% EQU 0 (
+              echo.
+              echo Installation successful!
+              echo.
+              echo Next steps:
+              echo 1. Safely eject your SD card
+              echo 2. Insert it into your M5Stack Cardputer
+              echo 3. Boot Bruce Firmware
+              echo 4. Navigate to the sideload/apps menu
+              echo 5. Select 'Ultimatum Cardputer'
+              echo.
+              echo For more information, see ultimatum\README.txt
+          ) else (
+              echo Installation failed
+              pause
+              exit /b 1
+          )
+          
+          pause
+          EOF
+          
+          echo "Bruce Firmware package created successfully"
+          ls -la bruce-package/
+          ls -la bruce-package/ultimatum/
+      
+      - name: Create package archive
+        run: |
+          cd bruce-package
+          zip -r ../ultimatum-bruce-firmware.zip .
+          cd ..
+          tar -czf ultimatum-bruce-firmware.tar.gz -C bruce-package .
+      
+      - name: Upload Bruce Firmware Package (ZIP)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ultimatum-bruce-package-zip
+          path: ultimatum-bruce-firmware.zip
+          retention-days: 90
+      
+      - name: Upload Bruce Firmware Package (TAR.GZ)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ultimatum-bruce-package-tar
+          path: ultimatum-bruce-firmware.tar.gz
+          retention-days: 90
+      
+      - name: Upload Firmware Binary Only
+        uses: actions/upload-artifact@v4
+        with:
+          name: ultimatum-firmware-bin
+          path: .pio/build/m5stack-cardputer/firmware.bin
+          retention-days: 90
+      
+      - name: Upload Bootloader
+        uses: actions/upload-artifact@v4
+        with:
+          name: ultimatum-bootloader
+          path: .pio/build/m5stack-cardputer/bootloader.bin
+          retention-days: 30
+          if-no-files-found: warn
+      
+      - name: Upload Partitions
+        uses: actions/upload-artifact@v4
+        with:
+          name: ultimatum-partitions
+          path: .pio/build/m5stack-cardputer/partitions.bin
+          retention-days: 30
+          if-no-files-found: warn
+      
+      # Create GitHub Release for tags
+      - name: Create Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            ultimatum-bruce-firmware.zip
+            ultimatum-bruce-firmware.tar.gz
+            .pio/build/m5stack-cardputer/firmware.bin
+          body: |
+            ## Ultimatum Cardputer Firmware Release
+            
+            ### Installation Options
+            
+            **Option 1: Bruce Firmware Sideload (Recommended)**
+            1. Download `ultimatum-bruce-firmware.zip`
+            2. Extract the contents
+            3. Run the installation script (see README in package)
+            4. Or manually copy `ultimatum` folder to `SD:/firmware/` on your SD card
+            
+            **Option 2: Direct Flash**
+            1. Download `firmware.bin`
+            2. Use PlatformIO or esptool to flash directly
+            
+            ### Documentation
+            - [Bruce Firmware Sideload Guide](https://github.com/Crashkeyz/UltimatumCardputerKey/blob/main/docs/BRUCE_FIRMWARE_SIDELOAD.md)
+            - [Main README](https://github.com/Crashkeyz/UltimatumCardputerKey/blob/main/README.md)
+            
+            ### What's Changed
+            See commit history for detailed changes.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
