@@ -2,8 +2,6 @@
 REM Installation script for Bruce Firmware sideload (Windows)
 REM Usage: install-bruce-sideload.bat DRIVE_LETTER:
 
-setlocal EnableDelayedExpansion
-
 echo ======================================================================
 echo   Ultimatum Cardputer - Bruce Firmware Sideload Installer
 echo ======================================================================
@@ -77,14 +75,14 @@ if not exist "default_16MB.csv" (
 REM Create firmware directory structure
 echo Creating directory structure...
 if not exist "%FIRMWARE_DIR%" mkdir "%FIRMWARE_DIR%"
-if !ERRORLEVEL! NEQ 0 (
+if %ERRORLEVEL% NEQ 0 (
     echo [X] Error: Could not create firmware directory
     pause
     exit /b 1
 )
 
 if not exist "%TARGET_DIR%" mkdir "%TARGET_DIR%"
-if !ERRORLEVEL! NEQ 0 (
+if %ERRORLEVEL% NEQ 0 (
     echo [X] Error: Could not create directory: %TARGET_DIR%
     pause
     exit /b 1
@@ -97,7 +95,7 @@ REM Copy firmware files
 echo Copying firmware files...
 
 copy /Y ".pio\build\m5stack-cardputer\firmware.bin" "%TARGET_DIR%\" >nul
-if !ERRORLEVEL! NEQ 0 (
+if %ERRORLEVEL% NEQ 0 (
     echo [X] Error: Failed to copy firmware.bin
     pause
     exit /b 1
@@ -105,7 +103,7 @@ if !ERRORLEVEL! NEQ 0 (
 echo [OK] Copied firmware.bin
 
 copy /Y "bruce_manifest.json" "%TARGET_DIR%\manifest.json" >nul
-if !ERRORLEVEL! NEQ 0 (
+if %ERRORLEVEL% NEQ 0 (
     echo [X] Error: Failed to copy manifest.json
     pause
     exit /b 1
@@ -113,7 +111,7 @@ if !ERRORLEVEL! NEQ 0 (
 echo [OK] Copied manifest.json
 
 copy /Y "default_16MB.csv" "%TARGET_DIR%\" >nul
-if !ERRORLEVEL! NEQ 0 (
+if %ERRORLEVEL% NEQ 0 (
     echo [X] Error: Failed to copy default_16MB.csv
     pause
     exit /b 1
@@ -149,7 +147,7 @@ echo.
 echo Version: 1.0.0
 ) > "%TARGET_DIR%\README.txt"
 
-if !ERRORLEVEL! NEQ 0 (
+if %ERRORLEVEL% NEQ 0 (
     echo [X] Warning: Failed to create README.txt
 )
 

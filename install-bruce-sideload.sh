@@ -2,8 +2,7 @@
 # Installation script for Bruce Firmware sideload
 # Usage: ./install-bruce-sideload.sh /path/to/sdcard
 
-set -e  # Exit on error
-set -u  # Exit on undefined variable
+set -eu  # Exit on error or undefined variable
 
 echo "======================================================================"
 echo "  Ultimatum Cardputer - Bruce Firmware Sideload Installer"
@@ -145,7 +144,7 @@ echo ""
 echo "Files installed to: $TARGET_DIR"
 echo ""
 echo "Directory contents:"
-ls -lh "$TARGET_DIR" 2>/dev/null || ls -l "$TARGET_DIR"
+ls -l "$TARGET_DIR"
 echo ""
 echo "Next Steps:"
 echo "  1. Safely eject your SD card from the computer"
