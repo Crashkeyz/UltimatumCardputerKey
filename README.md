@@ -10,7 +10,8 @@ Firmware for M5Stack Cardputer ADV (ESP32-S3)
 - Easy installation via SD card
 - Switch between firmwares on the fly
 
-**📖 See [docs/BRUCE_FIRMWARE_SIDELOAD.md](docs/BRUCE_FIRMWARE_SIDELOAD.md) for complete installation instructions**
+**📖 Quick Start:** [3-Step Installation Guide](docs/QUICK_START_BRUCE.md)  
+**📖 Full Guide:** [Complete Sideload Documentation](docs/BRUCE_FIRMWARE_SIDELOAD.md)
 
 ## Which Branch to Use?
 
