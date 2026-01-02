@@ -202,7 +202,7 @@ chmod +x setup-bruce-sideload.sh
 
 ## Further Resources
 
-- [Bruce Firmware Documentation](https://github.com/pr3y/Bruce) (example, adjust to actual repo)
+- [Bruce Firmware GitHub](https://github.com/pr3y/Bruce) - Multi-tool firmware for M5Stack devices
 - [UltimatumCardputerKey GitHub](https://github.com/Crashkeyz/UltimatumCardputerKey)
 - [M5Stack Cardputer Official Docs](https://docs.m5stack.com/en/core/Cardputer)
 

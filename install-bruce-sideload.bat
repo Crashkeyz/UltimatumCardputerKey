@@ -71,11 +71,22 @@ REM Copy firmware files
 echo Copying firmware files...
 
 copy /Y ".pio\build\m5stack-cardputer\firmware.bin" "%TARGET_DIR%\" >nul
-copy /Y "bruce_manifest.json" "%TARGET_DIR%\manifest.json" >nul
-copy /Y "default_16MB.csv" "%TARGET_DIR%\" >nul
-
 if %ERRORLEVEL% NEQ 0 (
-    echo [X] Error: Failed to copy files
+    echo [X] Error: Failed to copy firmware.bin
+    pause
+    exit /b 1
+)
+
+copy /Y "bruce_manifest.json" "%TARGET_DIR%\manifest.json" >nul
+if %ERRORLEVEL% NEQ 0 (
+    echo [X] Error: Failed to copy manifest.json
+    pause
+    exit /b 1
+)
+
+copy /Y "default_16MB.csv" "%TARGET_DIR%\" >nul
+if %ERRORLEVEL% NEQ 0 (
+    echo [X] Error: Failed to copy default_16MB.csv
     pause
     exit /b 1
 )

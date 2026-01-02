@@ -61,11 +61,9 @@ fi
 # Copy firmware files
 echo "Copying firmware files..."
 
-cp .pio/build/m5stack-cardputer/firmware.bin "$TARGET_DIR/" && \
-cp bruce_manifest.json "$TARGET_DIR/manifest.json" && \
-cp default_16MB.csv "$TARGET_DIR/"
-
-if [ $? -eq 0 ]; then
+if cp .pio/build/m5stack-cardputer/firmware.bin "$TARGET_DIR/" && \
+   cp bruce_manifest.json "$TARGET_DIR/manifest.json" && \
+   cp default_16MB.csv "$TARGET_DIR/"; then
     # Create a README in the target directory
     cat > "$TARGET_DIR/README.txt" << 'EOF'
 Ultimatum Cardputer Firmware - Bruce Firmware Sideload Package
