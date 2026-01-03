@@ -45,6 +45,8 @@ To avoid running out of flash memory:
 
 ## Build & Flash
 
+**📖 For detailed Evil Portal and Firmware Sideload instructions, see [docs/EVIL_PORTAL_GUIDE.md](docs/EVIL_PORTAL_GUIDE.md)**
+
 **📖 For detailed SD card setup instructions, see [docs/SD_CARD_SETUP.md](docs/SD_CARD_SETUP.md)**
 
 ### Using PlatformIO CLI
@@ -73,6 +75,44 @@ pio device monitor
 - Main code: `src/main.cpp`
 - Drivers: `drivers/cardputer_adv_driver.cpp`
 - Utilities: `lib/utilities.cpp`
+- Evil Portal: `lib/evil_portal.cpp`
+- Firmware Sideload: `lib/firmware_sideload.cpp`
+
+### 🎮 Quick Start - Keyboard Controls
+
+Once the firmware is running on your Cardputer:
+
+| Key | Action |
+|-----|--------|
+| **P** | Start Evil Portal (WiFi captive portal for web access) |
+| **S** | Stop Evil Portal |
+| **F** | List firmware files on SD card |
+
+### 🌐 Evil Portal - Wireless Firmware Access
+
+The Evil Portal creates a WiFi access point that allows you to:
+- Upload firmware wirelessly
+- Browse files on SD card
+- Manage the device via web interface
+
+**To use:**
+1. Press `P` on the keyboard
+2. Connect to WiFi: `Cardputer-Portal`
+3. Browser will open portal automatically (or go to 192.168.4.1)
+4. Upload firmware or manage files
+5. Press `S` to stop portal when done
+
+**See [docs/EVIL_PORTAL_GUIDE.md](docs/EVIL_PORTAL_GUIDE.md) for complete documentation.**
+
+### 💾 SD Card Firmware Sideload
+
+Automatically update firmware from SD card:
+1. Copy firmware.bin to SD card as `/firmware/autoload.bin`
+2. Insert SD card and restart Cardputer
+3. Firmware auto-updates on boot
+4. File renamed to `.old` after successful update
+
+**See [docs/EVIL_PORTAL_GUIDE.md](docs/EVIL_PORTAL_GUIDE.md) for complete documentation.**
 
 ### Using SD Card for Data Storage
 The firmware automatically initializes the SD card on boot. You can use it to:
@@ -80,6 +120,7 @@ The firmware automatically initializes the SD card on boot. You can use it to:
 - Save logs and debug data
 - Store images, fonts, and other assets
 - Cache downloaded data
+- **🆕 Sideload firmware updates (place as /firmware/autoload.bin)**
 
 Example code to write to SD card:
 ```cpp
@@ -110,6 +151,9 @@ if (file) {
 - 16MB Flash + 8MB PSRAM support
 - **SD card support for external storage**
 - **Optimized partition scheme for memory efficiency**
+- **🆕 Evil Portal (Captive Portal) for wireless firmware access**
+- **🆕 SD Card firmware sideload (auto-update on boot)**
+- **🆕 Web-based firmware upload and file management**
 
 ## Troubleshooting
 
