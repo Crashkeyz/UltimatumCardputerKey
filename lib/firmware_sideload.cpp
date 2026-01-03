@@ -21,18 +21,18 @@ void write_update_status(const char* status) {
 
 // Check for firmware on SD card and perform update
 bool check_and_update_from_sd() {
-    Serial.println("Checking for firmware update on SD card...");
+    Serial.println(F("Checking for firmware update on SD..."));
     
     // Create firmware directory if it doesn't exist
     if (!SD.exists(FIRMWARE_PATH)) {
         SD.mkdir(FIRMWARE_PATH);
-        Serial.println("Created /firmware directory");
+        Serial.println(F("Created /firmware directory"));
         return false;
     }
     
     // Check if autoload firmware exists
     if (!SD.exists(AUTOLOAD_FILE)) {
-        Serial.println("No firmware file found at " + String(AUTOLOAD_FILE));
+        Serial.println(F("No firmware file at /firmware/autoload.bin"));
         return false;
     }
     
@@ -50,17 +50,17 @@ bool check_and_update_from_sd() {
     M5.Display.fillScreen(BLACK);
     M5.Display.setCursor(10, 10);
     M5.Display.setTextColor(YELLOW);
-    M5.Display.println("FIRMWARE UPDATE");
+    M5.Display.println(F("FIRMWARE UPDATE"));
     M5.Display.setTextColor(WHITE);
-    M5.Display.println("Found: autoload.bin");
+    M5.Display.println(F("Found: autoload.bin"));
     M5.Display.printf("Size: %d KB\n", fileSize / 1024);
-    M5.Display.println("\nStarting update...");
+    M5.Display.println(F("\nStarting update..."));
     
     // Start update process
     if (!Update.begin(fileSize)) {
         write_update_status("ERROR: Not enough space for OTA");
         M5.Display.setTextColor(RED);
-        M5.Display.println("ERROR: Not enough space");
+        M5.Display.println(F("ERROR: Not enough space"));
         firmware.close();
         delay(3000);
         return false;
@@ -89,8 +89,8 @@ bool check_and_update_from_sd() {
     if (Update.end(true)) {
         write_update_status("SUCCESS: Firmware updated successfully");
         M5.Display.setTextColor(GREEN);
-        M5.Display.println("\nUPDATE SUCCESS!");
-        M5.Display.println("Rebooting...");
+        M5.Display.println(F("\nUPDATE SUCCESS!"));
+        M5.Display.println(F("Rebooting..."));
         
         // Rename the file to prevent re-flashing on next boot
         SD.rename(AUTOLOAD_FILE, "/firmware/autoload.bin.old");
@@ -102,7 +102,7 @@ bool check_and_update_from_sd() {
         String error = "ERROR: " + String(Update.errorString());
         write_update_status(error.c_str());
         M5.Display.setTextColor(RED);
-        M5.Display.println("\nUPDATE FAILED!");
+        M5.Display.println(F("\nUPDATE FAILED!"));
         M5.Display.println(Update.errorString());
         delay(5000);
         return false;
@@ -112,17 +112,17 @@ bool check_and_update_from_sd() {
 // List available firmware files on SD card
 void list_firmware_files() {
     if (!SD.exists(FIRMWARE_PATH)) {
-        Serial.println("No firmware directory found");
+        Serial.println(F("No firmware directory found"));
         return;
     }
     
     File dir = SD.open(FIRMWARE_PATH);
     if (!dir) {
-        Serial.println("Failed to open firmware directory");
+        Serial.println(F("Failed to open firmware directory"));
         return;
     }
     
-    Serial.println("Available firmware files:");
+    Serial.println(F("Available firmware files:"));
     File file = dir.openNextFile();
     while (file) {
         if (!file.isDirectory()) {
@@ -135,7 +135,7 @@ void list_firmware_files() {
 
 // Copy firmware from internal to SD card for backup
 bool backup_current_firmware() {
-    Serial.println("Backing up current firmware to SD card...");
+    Serial.println(F("Backing up current firmware..."));
     
     if (!SD.exists(FIRMWARE_PATH)) {
         SD.mkdir(FIRMWARE_PATH);
@@ -147,7 +147,7 @@ bool backup_current_firmware() {
     
     File backup = SD.open(filename, FILE_WRITE);
     if (!backup) {
-        Serial.println("Failed to create backup file");
+        Serial.println(F("Failed to create backup file"));
         return false;
     }
     
@@ -161,32 +161,31 @@ bool backup_current_firmware() {
 
 // Initialize firmware sideload system
 void init_firmware_sideload() {
-    Serial.println("Initializing firmware sideload system...");
+    Serial.println(F("Initializing firmware sideload..."));
     
     // Create firmware directory structure
     if (!SD.exists(FIRMWARE_PATH)) {
         SD.mkdir(FIRMWARE_PATH);
-        Serial.println("Created firmware directory");
+        Serial.println(F("Created firmware directory"));
     }
     
     // Create README file with instructions
-    const char* readme = 
-        "FIRMWARE SIDELOAD INSTRUCTIONS\n"
-        "==============================\n\n"
-        "To update firmware from SD card:\n"
-        "1. Place your firmware.bin file in this directory\n"
-        "2. Rename it to: autoload.bin\n"
-        "3. Restart your Cardputer\n"
-        "4. The firmware will auto-update on boot\n\n"
-        "Note: After successful update, the file will be\n"
-        "renamed to autoload.bin.old to prevent re-flashing.\n";
+    const char readme[] PROGMEM = 
+        "FIRMWARE SIDELOAD\n"
+        "=================\n\n"
+        "To update firmware:\n"
+        "1. Place firmware.bin in this folder\n"
+        "2. Rename to: autoload.bin\n"
+        "3. Restart Cardputer\n"
+        "4. Auto-updates on boot\n\n"
+        "After update, file renamed to .old\n";
     
     File readme_file = SD.open("/firmware/README.txt", FILE_WRITE);
     if (readme_file) {
-        readme_file.print(readme);
+        readme_file.print(FPSTR(readme));
         readme_file.close();
     }
     
-    Serial.println("Firmware sideload system ready");
-    Serial.println("Place firmware.bin as /firmware/autoload.bin to update");
+    Serial.println(F("Firmware sideload ready"));
+    Serial.println(F("Place: /firmware/autoload.bin"));
 }

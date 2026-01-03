@@ -11,7 +11,7 @@ void setup() {
     // Initialize USB Serial for debugging
     Serial.begin(115200);
     delay(500);
-    Serial.println("Cardputer ADV initializing...");
+    Serial.println(F("Cardputer ADV initializing..."));
     
     // Configure M5Unified for Cardputer
     auto cfg = M5.config();
@@ -30,9 +30,9 @@ void setup() {
     M5.Display.fillScreen(BLACK);
     M5.Display.setCursor(10, 10);
     M5.Display.setTextColor(GREEN);
-    M5.Display.println("Cardputer ADV");
+    M5.Display.println(F("Cardputer ADV"));
     M5.Display.setTextColor(WHITE);
-    M5.Display.println("Firmware Ready");
+    M5.Display.println(F("Firmware Ready"));
     
     // Initialize custom driver (includes SD card)
     initialize_driver();
@@ -44,15 +44,15 @@ void setup() {
     if (check_and_update_from_sd()) {
         // If update successful, device will reboot
         // This line only executes if no update found
-        Serial.println("No firmware update found");
+        Serial.println(F("No firmware update found"));
     }
     
-    M5.Display.println("\nPress 'P' for Portal");
-    M5.Display.println("Press 'F' for Files");
+    M5.Display.println(F("\nPress 'P' for Portal"));
+    M5.Display.println(F("Press 'F' for Files"));
     
-    Serial.println("Setup complete!");
-    Serial.println("Press 'P' to start Evil Portal");
-    Serial.println("Press 'F' to list firmware files");
+    Serial.println(F("Setup complete!"));
+    Serial.println(F("Press 'P' for Evil Portal"));
+    Serial.println(F("Press 'F' for firmware files"));
 }
 
 void loop() {
@@ -77,19 +77,19 @@ void loop() {
                     M5.Display.fillScreen(BLACK);
                     M5.Display.setCursor(10, 10);
                     M5.Display.setTextColor(CYAN);
-                    M5.Display.println("Starting Portal...");
+                    M5.Display.println(F("Starting Portal..."));
                     
                     if (init_evil_portal()) {
                         portalMode = true;
                         M5.Display.setTextColor(GREEN);
-                        M5.Display.println("Portal Active!");
+                        M5.Display.println(F("Portal Active!"));
                         M5.Display.setTextColor(WHITE);
-                        M5.Display.println("\nConnect to WiFi:");
-                        M5.Display.println("Cardputer-Portal");
-                        M5.Display.println("\nPress 'S' to stop");
+                        M5.Display.println(F("\nConnect to WiFi:"));
+                        M5.Display.println(F("Cardputer-Portal"));
+                        M5.Display.println(F("\nPress 'S' to stop"));
                     } else {
                         M5.Display.setTextColor(RED);
-                        M5.Display.println("Failed to start");
+                        M5.Display.println(F("Failed to start"));
                     }
                 }
             } else if (key == 'S' || key == 's') {
@@ -99,22 +99,22 @@ void loop() {
                     M5.Display.fillScreen(BLACK);
                     M5.Display.setCursor(10, 10);
                     M5.Display.setTextColor(GREEN);
-                    M5.Display.println("Portal Stopped");
+                    M5.Display.println(F("Portal Stopped"));
                     M5.Display.setTextColor(WHITE);
-                    M5.Display.println("\nPress 'P' for Portal");
+                    M5.Display.println(F("\nPress 'P' for Portal"));
                 }
             } else if (key == 'F' || key == 'f') {
                 M5.Display.fillScreen(BLACK);
                 M5.Display.setCursor(10, 10);
                 M5.Display.setTextColor(CYAN);
-                M5.Display.println("Firmware Files:");
+                M5.Display.println(F("Firmware Files:"));
                 M5.Display.setTextColor(WHITE);
                 list_firmware_files();
                 delay(3000);
                 M5.Display.fillScreen(BLACK);
                 M5.Display.setCursor(10, 10);
-                M5.Display.println("Press 'P' for Portal");
-                M5.Display.println("Press 'F' for Files");
+                M5.Display.println(F("Press 'P' for Portal"));
+                M5.Display.println(F("Press 'F' for Files"));
             }
             
             // Display key on screen (if not in portal mode)
