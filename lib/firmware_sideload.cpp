@@ -128,6 +128,7 @@ void list_firmware_files() {
         if (!file.isDirectory()) {
             Serial.printf("  %s (%d bytes)\n", file.name(), file.size());
         }
+        file.close();  // Properly close each file
         file = dir.openNextFile();
     }
     dir.close();
@@ -141,9 +142,10 @@ bool backup_current_firmware() {
         SD.mkdir(FIRMWARE_PATH);
     }
     
-    // Create backup filename with timestamp
+    // Create backup filename with timestamp (microseconds for uniqueness)
     char filename[64];
-    snprintf(filename, sizeof(filename), "/firmware/backup_%lu.bin", millis());
+    snprintf(filename, sizeof(filename), "/firmware/backup_%lu_%lu.bin", 
+             millis(), micros() % 1000);
     
     File backup = SD.open(filename, FILE_WRITE);
     if (!backup) {
@@ -151,11 +153,14 @@ bool backup_current_firmware() {
         return false;
     }
     
-    // Note: Actual firmware backup would require reading from flash
-    // This is a placeholder for the functionality
+    // NOTE: This is a placeholder implementation
+    // Actual firmware backup would require reading from the flash partition
+    // using esp_partition API, which is not implemented in this version
+    // The file is created for future implementation
     backup.close();
     
-    Serial.printf("Backup created: %s\n", filename);
+    Serial.printf("Backup placeholder created: %s\n", filename);
+    Serial.println(F("WARNING: Actual backup not implemented"));
     return true;
 }
 

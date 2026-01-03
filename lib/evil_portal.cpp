@@ -8,7 +8,8 @@
 // Evil Portal Configuration
 #define DNS_PORT 53
 #define WEB_PORT 80
-#define AP_SSID "Cardputer-Portal"
+#define AP_SSID "Cardputer-Portal"  // WARNING: Open network (no password)
+                                    // Only use in controlled environments
 
 // Global objects
 WebServer server(WEB_PORT);
@@ -96,6 +97,21 @@ void handleNotFound() {
     server.send_P(200, "text/html", PORTAL_HTML);
 }
 
+// Firmware update handler (placeholder)
+void handleFirmwareUpdate() {
+    // NOTE: Full firmware upload via web requires:
+    // 1. Handling multipart/form-data POST
+    // 2. Writing chunks to Update partition
+    // 3. Progress tracking
+    // This is a placeholder - firmware upload is better done via SD card
+    server.send(501, F("text/html"), 
+                F("<html><body><h1>Not Implemented</h1>"
+                  "<p>For firmware updates, use SD card sideload:</p>"
+                  "<ol><li>Save firmware to SD as /firmware/autoload.bin</li>"
+                  "<li>Restart device</li></ol>"
+                  "<a href='/'>Back</a></body></html>"));
+}
+
 // Initialize Evil Portal
 bool init_evil_portal() {
     Serial.println(F("Starting Evil Portal..."));
@@ -115,6 +131,7 @@ bool init_evil_portal() {
     server.on("/", handleRoot);
     server.on("/files", handleFileList);
     server.on("/api/info", handleApiInfo);
+    server.on("/update", HTTP_POST, handleFirmwareUpdate);  // Placeholder
     server.onNotFound(handleNotFound);
     
     // Start web server

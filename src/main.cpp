@@ -5,6 +5,12 @@
 #include "../lib/firmware_sideload.h"
 #include "../lib/evil_portal.h"
 
+// Display constants
+#define KEY_DISPLAY_X 0
+#define KEY_DISPLAY_Y 100
+#define KEY_DISPLAY_WIDTH 240
+#define KEY_DISPLAY_HEIGHT 30
+
 bool portalMode = false;
 
 void setup() {
@@ -41,11 +47,9 @@ void setup() {
     init_firmware_sideload();
     
     // Check for firmware update on SD card
-    if (check_and_update_from_sd()) {
-        // If update successful, device will reboot
-        // This line only executes if no update found
-        Serial.println(F("No firmware update found"));
-    }
+    // Returns true if update was attempted (successful or not)
+    // Returns false if no update file found
+    check_and_update_from_sd();  // Device will reboot if update successful
     
     M5.Display.println(F("\nPress 'P' for Portal"));
     M5.Display.println(F("Press 'F' for Files"));
@@ -119,8 +123,9 @@ void loop() {
             
             // Display key on screen (if not in portal mode)
             if (!portalMode) {
-                M5.Display.fillRect(0, 100, 240, 30, BLACK);
-                M5.Display.setCursor(10, 100);
+                M5.Display.fillRect(KEY_DISPLAY_X, KEY_DISPLAY_Y, 
+                                  KEY_DISPLAY_WIDTH, KEY_DISPLAY_HEIGHT, BLACK);
+                M5.Display.setCursor(10, KEY_DISPLAY_Y);
                 M5.Display.printf("Key: 0x%02X", keycode);
             }
         }
