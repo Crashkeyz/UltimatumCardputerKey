@@ -1,6 +1,6 @@
 // =====================================================
-// CARDPUTER ADV - Refactored Architecture
-// Professional firmware with manager-based design
+// SKELETOR CARDPUTER ADV - WiFi & Keyboard Edition
+// Optimized firmware with full keyboard + WiFi scanner
 // =====================================================
 
 #include <Arduino.h>
@@ -16,13 +16,8 @@
 #include <FS.h>
 #include "simple_security_check.h"
 
-// Manager classes for refactored architecture
-#include "managers/SDManager.h"
-#include "managers/WiFiManager.h"
-#include "managers/AIManager.h"
-
 #define TFT_BL 38
-#define FIRMWARE_VERSION "3.2.0-refactor"
+#define FIRMWARE_VERSION "3.1.0-ai-thunder"
 
 Adafruit_TCA8418 tca8418;
 
@@ -170,39 +165,60 @@ void setup() {
     tca8418.flush();
     
     Serial.begin(115200);
-    delay(500);
-    while (!Serial && millis() < 3000);
-    Serial.println("\n\n=== CARDPUTER ADV REFACTORED ===");
+    delay(500);  // Longer delay for serial detection
+    while (!Serial && millis() < 3000);  // Wait up to 3 seconds for serial
+    Serial.println("\n\n=== SKELETOR AI BOOT ===");
     Serial.println("Firmware: " FIRMWARE_VERSION);
-    Serial.println("Initializing managers...");
+    Serial.println("Initializing...");
     Serial.flush();
     
-    // Initialize SDManager with improved error handling
-    SDManager& sd = SDManager::getInstance();
-    sdCardAvailable = sd.initialize();
+    // Initialize SD Card with proper SPI pins for Cardputer ADV
+    Serial.println("SD: Initializing...");
+    SPI.begin(40, 39, 14, 12);  // SCK, MISO, MOSI, CS
+    delay(500);  // Longer initial delay
     
-    // Initialize WiFiManager
-    WiFiManager& wifiMgr = WiFiManager::getInstance();
-    wifiMgr.initialize();
-    
-    // Initialize AIManager
-    AIManager& aiMgr = AIManager::getInstance();
-    aiMgr.initialize();
-    aiApiKey = aiMgr.getAPIKey();
-    
-    // Load patterns (now handled by AIManager)
-    patternCount = aiMgr.getPatternCount();
-    for (int i = 0; i < patternCount && i < 10; i++) {
-        const LearnedPattern& p = aiMgr.getPattern(i);
-        patterns[i].trigger = p.trigger;
-        patterns[i].action = p.action;
+    bool sdOk = false;
+    for (int retry = 0; retry < 5; retry++) {  // More retries
+        Serial.printf("SD attempt %d...\n", retry + 1);
+        if (SD.begin(12, SPI, 25000000)) {
+            sdOk = true;
+            Serial.println("SD Card: SUCCESS");
+            break;
+        }
+        delay(500);  // Longer retry delay
     }
     
-    // Load voice key
-    if (sdCardAvailable) {
-        voiceApiKey = sd.loadVoiceKey("/voice_key.txt");
-        if (voiceApiKey.length() == 0) {
-            voiceApiKey = aiApiKey;  // Fallback to AI key
+    if (!sdOk) {
+        Serial.println("SD Card: FAIL (no card or format issue)");
+        Serial.println("Insert FAT32 formatted SD card and reboot");
+        sdCardAvailable = false;
+    } else {
+        Serial.println("SD Card: OK");
+        Serial.println("Loading files from SD...");
+        sdCardAvailable = true;
+        loadLearnedPatterns();
+        
+        // Try to load AI API key from SD
+        File keyFile = SD.open("/ai_key.txt");
+        if (keyFile) {
+            aiApiKey = keyFile.readStringUntil('\n');
+            aiApiKey.trim();
+            keyFile.close();
+            Serial.println("AI Key: Loaded");
+        } else {
+            Serial.println("AI Key: Missing (create ai_key.txt on SD)");
+        }
+        
+        // Load voice API key (can be same as AI key or separate)
+        File voiceKeyFile = SD.open("/voice_key.txt");
+        if (voiceKeyFile) {
+            voiceApiKey = voiceKeyFile.readStringUntil('\n');
+            voiceApiKey.trim();
+            voiceKeyFile.close();
+            Serial.println("Voice Key: Loaded");
+        } else {
+            // Use AI key as fallback
+            voiceApiKey = aiApiKey;
             Serial.println("Voice Key: Using AI key");
         }
         
@@ -214,18 +230,11 @@ void setup() {
             Serial.println("Audio Buffer: Failed");
         }
         
-        // Load and auto-connect WiFi
-        if (wifiMgr.loadSavedNetworks()) {
-            savedNetworkCount = wifiMgr.getSavedNetworkCount();
-            for (int i = 0; i < savedNetworkCount && i < 10; i++) {
-                const SavedNetwork& saved = wifiMgr.getSavedNetwork(i);
-                savedNetworks[i].ssid = saved.ssid;
-                savedNetworks[i].password = saved.password;
-                savedNetworks[i].lastUsed = saved.lastUsed;
-            }
-            
+        // Load saved WiFi credentials and auto-connect
+        loadWiFiCredentials();
+        if (savedNetworkCount > 0) {
             Serial.println("WiFi: Auto-connecting...");
-            wifiMgr.autoConnect();
+            autoConnectWiFi();
         }
     }
     
