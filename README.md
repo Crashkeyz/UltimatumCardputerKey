@@ -28,7 +28,17 @@ This is a **paid, proprietary firmware** developed to fund ongoing development a
 
 ## 🚀 Features
 
-### Thunder Castle Edition v3.1.0-ai-thunder
+### Thunder Castle Edition v3.2.0-refactor
+
+**🆕 Professional Refactored Architecture:**
+
+- ✅ **Manager-Based Design** - Clean separation of concerns
+- ✅ **SDManager** - Reliable SD card handling with proper error recovery
+- ✅ **WiFiManager** - Robust network operations and auto-connect
+- ✅ **AIManager** - Centralized AI processing and pattern learning
+- ✅ **14% Code Reduction** - From 2,167 to 1,855 lines in main.cpp
+- ✅ **Fixed SD Card Issues** - Improved initialization with card detection
+- ✅ **Fixed AI Mode Bugs** - Buffered keyboard input, proper text wrapping
 
 **Advanced AI System:**
 
@@ -37,6 +47,7 @@ This is a **paid, proprietary firmware** developed to fund ongoing development a
 - ✅ **Background Learning** - Experiments every 30s, discovers hardware capabilities
 - ✅ **Pattern Learning** - Teach custom commands (learn:trigger->action)
 - ✅ **Voice Recognition** - Microphone input with speech-to-text
+- ✅ **Improved Input Handling** - State machine for reliable keyboard input
 
 **Professional Security Tools:**
 
@@ -216,17 +227,28 @@ Then type: w (executes WiFi scanner)
 
 ```
 ├── src/
-│   └── main.cpp           # Main firmware code
-├── drivers/
-│   ├── cardputer_adv_driver.cpp
-│   └── cardputer_adv_driver.h
+│   ├── main.cpp               # Main firmware (refactored, 1855 lines)
+│   ├── managers/
+│   │   ├── SDManager.cpp/h    # SD card operations
+│   │   ├── WiFiManager.cpp/h  # Network management
+│   │   └── AIManager.cpp/h    # AI processing
+│   ├── screens/
+│   │   ├── BaseScreen.h       # Screen interface
+│   │   ├── MenuScreen.cpp/h   # Main menu
+│   │   └── AIScreen.cpp/h     # AI assistant
+│   └── utils/
+│       ├── DisplayUtils.cpp/h # Display helpers
+│       └── KeyboardUtils.cpp/h # Input handling
 ├── lib/
-│   └── utilities.cpp      # Helper functions
+│   ├── cardputer_driver/      # Keyboard driver
+│   ├── security_auditor/      # Security tools
+│   └── utilities.cpp          # Helper functions
 ├── docs/
 │   ├── README.md
 │   └── SD_CARD_SETUP.md
-├── platformio.ini         # Build configuration
-└── LICENSE                # Proprietary license
+├── platformio.ini             # Build configuration
+├── REFACTORING_SUMMARY.md     # Architecture documentation
+└── LICENSE                    # Proprietary license
 ```
 
 ### Building from Source (License Holders Only)
