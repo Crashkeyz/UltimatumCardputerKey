@@ -827,7 +827,8 @@ void generateCode() {
 }
 
 void saveCodeToSD() {
-    if (!sdCardAvailable) {
+    SDManager& sd = SDManager::getInstance();
+    if (!sd.isAvailable()) {
         M5Cardputer.Display.fillRect(10, 110, 220, 12, TFT_BLACK);
         M5Cardputer.Display.setCursor(10, 110);
         M5Cardputer.Display.setTextColor(TFT_RED, TFT_BLACK);
@@ -837,23 +838,20 @@ void saveCodeToSD() {
         return;
     }
     
-    File file = SD.open("/" + codeFilename, FILE_WRITE);
-    if (file) {
-        file.print(codeBuffer);
-        file.close();
-        
-        M5Cardputer.Display.fillRect(10, 110, 220, 12, TFT_BLACK);
-        M5Cardputer.Display.setCursor(10, 110);
+    bool success = sd.writeFile("/" + codeFilename, codeBuffer);
+    
+    M5Cardputer.Display.fillRect(10, 110, 220, 12, TFT_BLACK);
+    M5Cardputer.Display.setCursor(10, 110);
+    
+    if (success) {
         M5Cardputer.Display.setTextColor(TFT_GREEN, TFT_BLACK);
         M5Cardputer.Display.print("Saved: " + codeFilename);
-        delay(2000);
     } else {
-        M5Cardputer.Display.fillRect(10, 110, 220, 12, TFT_BLACK);
-        M5Cardputer.Display.setCursor(10, 110);
         M5Cardputer.Display.setTextColor(TFT_RED, TFT_BLACK);
         M5Cardputer.Display.print("Save failed!");
-        delay(2000);
     }
+    
+    delay(2000);
     codeWriterScreen();
 }
 
@@ -1049,24 +1047,19 @@ void connectToWiFi() {
     M5Cardputer.Display.setTextColor(TFT_RED, TFT_BLACK);
     M5Cardputer.Display.println("Connecting");
     
-    WiFi.begin(scannedSSIDs[selectedNetwork].c_str(), wifiPassword.c_str());
-    
-    int attempts = 0;
-    while (WiFi.status() != WL_CONNECTED && attempts < 20) {
-        delay(500);
-        M5Cardputer.Display.print(".");
-        attempts++;
-    }
+    // Use WiFiManager for connection
+    WiFiManager& wifiMgr = WiFiManager::getInstance();
+    bool connected = wifiMgr.connect(scannedSSIDs[selectedNetwork], wifiPassword);
     
     M5Cardputer.Display.setCursor(10, 70);
-    if (WiFi.status() == WL_CONNECTED) {
+    if (connected) {
         M5Cardputer.Display.setTextColor(TFT_GREEN, TFT_BLACK);
         M5Cardputer.Display.println("Connected!");
         M5Cardputer.Display.setCursor(10, 90);
         M5Cardputer.Display.setTextColor(TFT_WHITE, TFT_BLACK);
-        M5Cardputer.Display.print(WiFi.localIP());
+        M5Cardputer.Display.print(wifiMgr.getLocalIP());
         
-        // Save credentials to SD card
+        // Save credentials
         saveWiFiCredentials();
         M5Cardputer.Display.setCursor(10, 110);
         M5Cardputer.Display.setTextSize(1);
@@ -1169,7 +1162,39 @@ void aiAssistantScreen() {
 }
 
 void processAIQuery() {
-    // Check for learned patterns first
+    // Use AIManager to process the query
+    AIManager& aiMgr = AIManager::getInstance();
+    
+    // Check for learning commands first
+    if (aiInput.startsWith("learn:")) {
+        String cmd = aiInput.substring(6);
+        int arrowPos = cmd.indexOf("->");
+        if (arrowPos > 0) {
+            String trigger = cmd.substring(0, arrowPos);
+            String action = cmd.substring(arrowPos + 2);
+            trigger.trim();
+            action.trim();
+            
+            if (aiMgr.learnPattern(trigger, action)) {
+                // Update local patterns array
+                patternCount = aiMgr.getPatternCount();
+                for (int i = 0; i < patternCount && i < 10; i++) {
+                    const LearnedPattern& p = aiMgr.getPattern(i);
+                    patterns[i].trigger = p.trigger;
+                    patterns[i].action = p.action;
+                }
+                aiResponse = "Learned! Try: " + trigger;
+            } else {
+                aiResponse = "Pattern full (max 10)";
+            }
+        } else {
+            aiResponse = "Bad format. Use: learn:word->action";
+        }
+        aiAssistantScreen();
+        return;
+    }
+    
+    // Check for pattern match that triggers actions
     for (int i = 0; i < patternCount; i++) {
         if (aiInput.equalsIgnoreCase(patterns[i].trigger)) {
             aiResponse = "Action: " + patterns[i].action;
@@ -1189,433 +1214,105 @@ void processAIQuery() {
         }
     }
     
-    // Enhanced offline AI - works without WiFi/API
-    String query = aiInput;
-    query.toLowerCase();
-    query.trim();
+    // Use AIManager for general query processing
+    aiResponse = aiMgr.processQuery(aiInput);
     
-    // Conversational responses
-    if (query.indexOf("hello") >= 0 || query.indexOf("hi") >= 0 || query.indexOf("hey") >= 0) {
-        aiResponse = "Hey! I'm your Cardputer AI. Ask me anything about the system, or say 'help' for commands!";
-    }
-    else if (query.indexOf("how are you") >= 0 || query.indexOf("what's up") >= 0) {
-        aiResponse = "Running great! CPU at " + String(ESP.getCpuFreqMHz()) + "MHz, " + String(ESP.getFreeHeap()/1024) + "KB RAM free. Ready to help!";
-    }
-    else if (query.indexOf("your name") >= 0 || query.indexOf("who are you") >= 0) {
-        aiResponse = "I'm Thunder AI, your Cardputer assistant. I learn from you and help with WiFi, security, and system tasks!";
-    }
-    
-    // WiFi related
-    else if (query.indexOf("wifi") >= 0 || query.indexOf("connect") >= 0 || query.indexOf("internet") >= 0 || query.indexOf("network") >= 0) {
-        if (WiFi.status() == WL_CONNECTED) {
-            aiResponse = "WiFi connected! SSID: " + WiFi.SSID() + ", Signal: " + String(WiFi.RSSI()) + "dBm, IP: " + WiFi.localIP().toString();
-        } else {
-            aiResponse = "WiFi OFF. Say 'scan wifi' to find networks, or go to WiFi Scanner from main menu.";
-        }
-    }
-    else if (query.indexOf("scan") >= 0 && query.indexOf("wifi") >= 0) {
-        aiResponse = "Starting WiFi scan...";
-        aiAssistantScreen();
-        delay(500);
-        currentState = WIFI_SCANNER;
-        wifiScanScreen();
-        return;
-    }
-    
-    // Learning commands
-    else if (query.indexOf("learn") >= 0 || query.indexOf("teach") >= 0 || query.indexOf("train") >= 0) {
-        if (aiInput.startsWith("learn:")) {
-            String cmd = aiInput.substring(6);
-            int arrowPos = cmd.indexOf("->");
-            if (arrowPos > 0 && patternCount < 10) {
-                patterns[patternCount].trigger = cmd.substring(0, arrowPos);
-                patterns[patternCount].action = cmd.substring(arrowPos + 2);
-                patterns[patternCount].trigger.trim();
-                patterns[patternCount].action.trim();
-                patternCount++;
-                saveLearnedPatterns();
-                aiResponse = "Learned! Now try: " + patterns[patternCount-1].trigger;
-            } else {
-                aiResponse = "Pattern full or bad format. Use: learn:word->action";
-            }
-        } else {
-            aiResponse = "I can learn patterns! Format: learn:trigger->action. Example: learn:w->wifi. I have " + String(patternCount) + "/10 patterns.";
-        }
-    }
-    
-    // Help and capabilities  
-    else if (query.indexOf("help") >= 0 || query.indexOf("command") >= 0 || query.indexOf("what can you do") >= 0) {
-        aiResponse = "I can: scan WiFi, run security audits, learn patterns, check system status, analyze hardware, and chat! Try: 'scan wifi', 'status', 'security', 'learn', or just talk to me!";
-    }
-    
-    // System information
-    else if (query.indexOf("status") >= 0 || query.indexOf("info") >= 0 || query.indexOf("system") >= 0) {
-        String resp = "WiFi:" + String(WiFi.status() == WL_CONNECTED ? "ON" : "OFF") + " ";
-        resp += "API:" + String(aiApiKey.length() > 0 ? "OK" : "NO") + " ";
-        resp += "Patterns:" + String(patternCount) + " ";
-        resp += "SD:" + String(sdCardAvailable ? "OK" : "NO") + " ";
-        resp += "Uptime:" + String(millis()/1000) + "s";
-        aiResponse = resp;
-    }
-    else if (query.indexOf("memory") >= 0 || query.indexOf("ram") >= 0 || query.indexOf("heap") >= 0) {
-        aiResponse = "Free RAM: " + String(ESP.getFreeHeap()/1024) + "KB / " + String(ESP.getHeapSize()/1024) + "KB. Usage: " + String(100-(ESP.getFreeHeap()*100/ESP.getHeapSize())) + "%";
-    }
-    else if (query.indexOf("cpu") >= 0 || query.indexOf("speed") >= 0 || query.indexOf("frequency") >= 0) {
-        aiResponse = "ESP32-S3 running at " + String(ESP.getCpuFreqMHz()) + "MHz. Flash: " + String(ESP.getFlashChipSize()/(1024*1024)) + "MB. Chip rev: v" + String(ESP.getChipRevision());
-    }
-    
-    // Security and scanning
-    else if (query.indexOf("security") >= 0 || query.indexOf("audit") >= 0 || query.indexOf("check") >= 0) {
-        aiResponse = "Opening Security Auditor...";
-        aiAssistantScreen();
-        delay(800);
-        currentState = SECURITY_AUDIT;
-        securityAuditScreen();
-        return;
-    }
-    
-    // Hardware queries
-    else if (query.indexOf("hardware") >= 0 || query.indexOf("gpio") >= 0 || query.indexOf("pin") >= 0) {
-        aiResponse = "ESP32-S3 with GPIO, I2C, SPI, mic, display. Background learning experiments with pins. Last discovery: " + lastDiscovery;
-    }
-    else if (query.indexOf("mic") >= 0 || query.indexOf("microphone") >= 0 || query.indexOf("voice") >= 0) {
-        aiResponse = "Press M to toggle mic recording. I'll transcribe your voice to text! Mic is " + String(M5Cardputer.Mic.isEnabled() ? "enabled" : "disabled");
-    }
-    else if (query.indexOf("display") >= 0 || query.indexOf("screen") >= 0) {
-        aiResponse = "240x135 ST7789 display. Brightness controlled via GPIO38. Rotation: 1. Currently running Thunder Castle interface!";
-    }
-    else if (query.indexOf("sd") >= 0 || query.indexOf("card") >= 0 || query.indexOf("storage") >= 0) {
-        if (sdCardAvailable) {
-            aiResponse = "SD card OK! SPI pins: SCK=40, MISO=39, MOSI=14, CS=12. Stores patterns, keys, and learning logs.";
-        } else {
-            aiResponse = "SD card not detected. Insert FAT32 formatted card and reboot. Needed for learning, API keys, patterns.";
-        }
-    }
-    
-    // Discovery and learning
-    else if (query.indexOf("discover") >= 0 || query.indexOf("found") >= 0 || query.indexOf("experiment") >= 0) {
-        aiResponse = "I experiment every 30s! Last: " + lastDiscovery + ". Experiment #" + String(learningExperiment) + ". Checking GPIO, I2C, WiFi, memory...";
-    }
-    else if (query.indexOf("pattern") >= 0) {
-        if (patternCount > 0) {
-            aiResponse = String(patternCount) + " patterns learned: ";
-            for (int i = 0; i < patternCount && i < 3; i++) {
-                aiResponse += patterns[i].trigger + " ";
-            }
-            if (patternCount > 3) aiResponse += "...";
-        } else {
-            aiResponse = "No patterns yet. Teach me! Use: learn:word->action";
-        }
-    }
-    
-    // Fun/personality
-    else if (query.indexOf("joke") >= 0 || query.indexOf("funny") >= 0) {
-        aiResponse = "Why did the ESP32 break up with WiFi? Too many connection issues! 😄 Want me to scan for better networks?";
-    }
-    else if (query.indexOf("thanks") >= 0 || query.indexOf("thank you") >= 0) {
-        aiResponse = "You're welcome! Happy to help. I'm always learning from you! 🤖";
-    }
-    else if (query.indexOf("good") >= 0 && query.indexOf("job") >= 0) {
-        aiResponse = "Thanks! I try my best. Learning experiment #" + String(learningExperiment) + " complete. More discoveries coming!";
-    }
-    
-    // About and version
-    else if (query.indexOf("about") >= 0 || query.indexOf("version") >= 0) {
-        aiResponse = "Cardputer ADV v" FIRMWARE_VERSION " - Thunder Castle Edition. AI learning enabled. Made for hacking the planet! 🌩️";
-    }
-    
-    // Time and uptime
-    else if (query.indexOf("time") >= 0 || query.indexOf("uptime") >= 0 || query.indexOf("running") >= 0) {
-        unsigned long seconds = millis() / 1000;
-        unsigned long minutes = seconds / 60;
-        unsigned long hours = minutes / 60;
-        aiResponse = "Uptime: " + String(hours) + "h " + String(minutes % 60) + "m " + String(seconds % 60) + "s. Learning cycles: " + String(learningExperiment);
-    }
-    
-    // Default intelligent response
-    else {
-        // Try to be helpful even for unknown queries
-        if (WiFi.status() != WL_CONNECTED && aiApiKey.length() == 0) {
-            aiResponse = "I'm offline but smart! Try: 'help', 'status', 'scan wifi', 'learn', or 'what can you do'. Connect WiFi + add API key for full AI power!";
-        } else if (WiFi.status() == WL_CONNECTED && aiApiKey.length() > 0) {
-            // Use API for complex queries
-            aiProcessing = true;
-            aiResponse = "";
-            aiAssistantScreen();
-            String response = callAIAPI(aiInput);
-            aiProcessing = false;
-            if (response.length() > 0) {
-                aiResponse = response;
-            } else {
-                aiResponse = "API error. But I can still help offline! Try 'help' for commands.";
-            }
-            aiAssistantScreen();
-            return;
-        } else {
-            aiResponse = "Interesting question! I'm working on it. Meanwhile, try 'help' for things I can do now. Learning new capabilities every 30s!";
-        }
-    }
-    
-    aiAssistantScreen();
     aiAssistantScreen();
 }
 
 String callAIAPI(String query) {
-    if (aiApiKey.length() == 0) {
-        return "No API key. Add ai_key.txt to SD.";
-    }
-    
-    HTTPClient http;
-    
-    // Using DeepSeek API (cheaper alternative to OpenAI)
-    http.begin("https://api.deepseek.com/v1/chat/completions");
-    http.addHeader("Content-Type", "application/json");
-    http.addHeader("Authorization", "Bearer " + aiApiKey);
-    
-    // Build JSON payload with system context
-    StaticJsonDocument<2048> doc;
-    doc["model"] = "deepseek-chat";
-    
-    JsonArray messages = doc.createNestedArray("messages");
-    
-    // Add system message with device context and learned patterns
-    JsonObject systemMsg = messages.createNestedObject();
-    systemMsg["role"] = "system";
-    String systemContent = "You are Thunder AI assistant on ESP32 Cardputer. ";
-    systemContent += "Device: ESP32-S3, " + String(ESP.getFreeHeap()/1024) + "KB RAM free, ";
-    systemContent += "WiFi:" + String(WiFi.status() == WL_CONNECTED ? "ON" : "OFF") + ". ";
-    
-    // Include learned patterns in context
-    if (patternCount > 0) {
-        systemContent += "Learned patterns: ";
-        for (int i = 0; i < patternCount && i < 5; i++) {
-            systemContent += patterns[i].trigger + "->" + patterns[i].action;
-            if (i < patternCount - 1) systemContent += ", ";
-        }
-        systemContent += ". ";
-    }
-    
-    // Include latest discovery from background learning
-    if (lastDiscovery.length() > 0) {
-        systemContent += "Latest discovery: " + lastDiscovery + ". ";
-    }
-    
-    systemContent += "Keep responses under 100 chars, be helpful and concise.";
-    systemMsg["content"] = systemContent;
-    
-    // Add user query
-    JsonObject msg = messages.createNestedObject();
-    msg["role"] = "user";
-    msg["content"] = query;
-    
-    doc["max_tokens"] = 150;
-    doc["temperature"] = 0.7;
-    
-    String payload;
-    serializeJson(doc, payload);
-    
-    Serial.println("AI API Request:");
-    Serial.println(payload);
-    
-    int httpCode = http.POST(payload);
-    
-    if (httpCode == 200) {
-        String response = http.getString();
-        Serial.println("AI API Response:");
-        Serial.println(response);
-        
-        StaticJsonDocument<2048> responseDoc;
-        DeserializationError error = deserializeJson(responseDoc, response);
-        
-        if (!error) {
-            const char* content = responseDoc["choices"][0]["message"]["content"];
-            http.end();
-            return String(content);
-        } else {
-            Serial.println("JSON parse error");
-            http.end();
-            return "Parse error";
-        }
-    } else {
-        Serial.printf("HTTP Error: %d\n", httpCode);
-        http.end();
-        return "HTTP error: " + String(httpCode);
-    }
+    // Use AIManager for API calls
+    AIManager& aiMgr = AIManager::getInstance();
+    return aiMgr.callDeepSeekAPI(query);
 }
 
 void learnPattern(String trigger, String action) {
-    if (patternCount < 10) {
-        patterns[patternCount].trigger = trigger;
-        patterns[patternCount].action = action;
-        patternCount++;
-        saveLearnedPatterns();
+    // Use AIManager for pattern learning
+    AIManager& aiMgr = AIManager::getInstance();
+    if (aiMgr.learnPattern(trigger, action)) {
+        patternCount = aiMgr.getPatternCount();
+        for (int i = 0; i < patternCount && i < 10; i++) {
+            const LearnedPattern& p = aiMgr.getPattern(i);
+            patterns[i].trigger = p.trigger;
+            patterns[i].action = p.action;
+        }
     }
 }
 
 void saveLearnedPatterns() {
-    if (!sdCardAvailable) {
-        Serial.println("SD card not available - can't save patterns");
-        return;
-    }
-    
-    File file = SD.open("/patterns.txt", FILE_WRITE);
-    if (!file) {
-        Serial.println("Failed to open patterns file for writing");
-        return;
-    }
-    
-    for (int i = 0; i < patternCount; i++) {
-        file.print(patterns[i].trigger);
-        file.print("->");
-        file.println(patterns[i].action);
-    }
-    
-    file.close();
-    Serial.printf("Saved %d patterns to SD\n", patternCount);
+    // Delegate to AIManager
+    AIManager& aiMgr = AIManager::getInstance();
+    aiMgr.savePatterns();
 }
 
 void loadLearnedPatterns() {
-    if (!sdCardAvailable) {
-        Serial.println("SD card not available - can't load patterns");
-        return;
-    }
-    
-    File file = SD.open("/patterns.txt");
-    if (!file) {
-        Serial.println("No patterns file found");
-        return;
-    }
-    
-    patternCount = 0;
-    while (file.available() && patternCount < 10) {
-        String line = file.readStringUntil('\n');
-        line.trim();
-        
-        int arrowPos = line.indexOf("->");
-        if (arrowPos > 0) {
-            patterns[patternCount].trigger = line.substring(0, arrowPos);
-            patterns[patternCount].action = line.substring(arrowPos + 2);
-            patternCount++;
+    // Delegate to AIManager
+    AIManager& aiMgr = AIManager::getInstance();
+    if (aiMgr.loadPatterns()) {
+        patternCount = aiMgr.getPatternCount();
+        for (int i = 0; i < patternCount && i < 10; i++) {
+            const LearnedPattern& p = aiMgr.getPattern(i);
+            patterns[i].trigger = p.trigger;
+            patterns[i].action = p.action;
         }
     }
-    
-    file.close();
-    Serial.printf("Loaded %d patterns from SD\n", patternCount);
 }
 
 // ====== WiFi Credential Management (Multiple Networks) ======
 void saveWiFiCredentials() {
-    if (!sdCardAvailable) {
-        Serial.println("SD card not available - can't save WiFi credentials");
-        return;
-    }
-    
+void saveWiFiCredentials() {
+    // Use WiFiManager to save network
+    WiFiManager& wifiMgr = WiFiManager::getInstance();
     String ssid = scannedSSIDs[selectedNetwork];
     
-    // Check if network already saved, update password
-    bool found = false;
-    for (int i = 0; i < savedNetworkCount; i++) {
-        if (savedNetworks[i].ssid == ssid) {
-            savedNetworks[i].password = wifiPassword;
-            savedNetworks[i].lastUsed = millis();
-            found = true;
-            break;
+    if (wifiMgr.saveNetwork(ssid, wifiPassword)) {
+        // Update local state
+        savedNetworkCount = wifiMgr.getSavedNetworkCount();
+        for (int i = 0; i < savedNetworkCount && i < 10; i++) {
+            const SavedNetwork& saved = wifiMgr.getSavedNetwork(i);
+            savedNetworks[i].ssid = saved.ssid;
+            savedNetworks[i].password = saved.password;
+            savedNetworks[i].lastUsed = saved.lastUsed;
         }
+        Serial.printf("Saved WiFi: %s\n", ssid.c_str());
     }
-    
-    // Add new network if not found and space available
-    if (!found && savedNetworkCount < 10) {
-        savedNetworks[savedNetworkCount].ssid = ssid;
-        savedNetworks[savedNetworkCount].password = wifiPassword;
-        savedNetworks[savedNetworkCount].lastUsed = millis();
-        savedNetworkCount++;
-    }
-    
-    saveSavedNetworks();
-    Serial.printf("Saved WiFi: %s (total: %d)\n", ssid.c_str(), savedNetworkCount);
 }
 
 void saveSavedNetworks() {
-    if (!sdCardAvailable) return;
-    
-    File file = SD.open("/wifi_networks.txt", FILE_WRITE);
-    if (!file) {
-        Serial.println("Failed to save WiFi networks");
-        return;
-    }
-    
-    for (int i = 0; i < savedNetworkCount; i++) {
-        file.printf("%s|%s|%d\n", 
-            savedNetworks[i].ssid.c_str(),
-            savedNetworks[i].password.c_str(),
-            savedNetworks[i].lastUsed);
-    }
-    file.close();
-    Serial.printf("Saved %d networks to SD\n", savedNetworkCount);
+    // Delegate to WiFiManager
+    WiFiManager& wifiMgr = WiFiManager::getInstance();
+    wifiMgr.saveSavedNetworks();
 }
 
 void loadWiFiCredentials() {
-    if (!sdCardAvailable) {
-        Serial.println("SD card not available - can't load WiFi credentials");
-        return;
-    }
-    
-    File file = SD.open("/wifi_networks.txt");
-    if (!file) {
-        Serial.println("No saved WiFi credentials");
-        return;
-    }
-    
-    savedNetworkCount = 0;
-    while (file.available() && savedNetworkCount < 10) {
-        String line = file.readStringUntil('\n');
-        line.trim();
-        
-        // Parse: ssid|password|lastUsed
-        int pipe1 = line.indexOf('|');
-        int pipe2 = line.lastIndexOf('|');
-        
-        if (pipe1 > 0 && pipe2 > pipe1) {
-            savedNetworks[savedNetworkCount].ssid = line.substring(0, pipe1);
-            savedNetworks[savedNetworkCount].password = line.substring(pipe1 + 1, pipe2);
-            savedNetworks[savedNetworkCount].lastUsed = line.substring(pipe2 + 1).toInt();
-            savedNetworkCount++;
+    // Delegate to WiFiManager
+    WiFiManager& wifiMgr = WiFiManager::getInstance();
+    if (wifiMgr.loadSavedNetworks()) {
+        savedNetworkCount = wifiMgr.getSavedNetworkCount();
+        for (int i = 0; i < savedNetworkCount && i < 10; i++) {
+            const SavedNetwork& saved = wifiMgr.getSavedNetwork(i);
+            savedNetworks[i].ssid = saved.ssid;
+            savedNetworks[i].password = saved.password;
+            savedNetworks[i].lastUsed = saved.lastUsed;
         }
     }
-    file.close();
-    
-    Serial.printf("Loaded %d saved WiFi networks\n", savedNetworkCount);
 }
 
 void autoConnectWiFi() {
-    if (savedNetworkCount == 0) return;
-    
-    // Find most recently used network
-    int mostRecent = 0;
-    for (int i = 1; i < savedNetworkCount; i++) {
-        if (savedNetworks[i].lastUsed > savedNetworks[mostRecent].lastUsed) {
-            mostRecent = i;
-        }
-    }
-    
-    Serial.printf("Auto-connecting to: %s\n", savedNetworks[mostRecent].ssid.c_str());
-    WiFi.begin(savedNetworks[mostRecent].ssid.c_str(), savedNetworks[mostRecent].password.c_str());
-    
-    int attempts = 0;
-    while (WiFi.status() != WL_CONNECTED && attempts < 15) {
-        delay(500);
-        Serial.print(".");
-        attempts++;
-    }
-    
-    if (WiFi.status() == WL_CONNECTED) {
-        Serial.println("\nWiFi: Auto-connected!");
-        Serial.printf("IP: %s\n", WiFi.localIP().toString().c_str());
+    // Delegate to WiFiManager
+    WiFiManager& wifiMgr = WiFiManager::getInstance();
+    if (wifiMgr.autoConnect()) {
         autoConnected = true;
-        savedNetworks[mostRecent].lastUsed = millis();
-        saveSavedNetworks();
+        // Update local state
+        savedNetworkCount = wifiMgr.getSavedNetworkCount();
+        for (int i = 0; i < savedNetworkCount && i < 10; i++) {
+            const SavedNetwork& saved = wifiMgr.getSavedNetwork(i);
+            savedNetworks[i].ssid = saved.ssid;
+            savedNetworks[i].password = saved.password;
+            savedNetworks[i].lastUsed = saved.lastUsed;
+        }
     } else {
-        Serial.println("\nWiFi: Auto-connect failed");
+        Serial.println("WiFi: Auto-connect failed");
     }
 }
 
