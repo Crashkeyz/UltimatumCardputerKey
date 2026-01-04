@@ -1,0 +1,64 @@
+===================================
+SD CARD FILES FOR CARDPUTER ADV
+===================================
+
+Create these files on your SD card root directory:
+
+1. /ai_key.txt
+   - Your DeepSeek API key (single line)
+   - Get from: https://platform.deepseek.com/
+   - Example:
+     sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+2. /creds.txt (Optional - for Security Auditor)
+   - Format:
+     wifi_ssid=YourNetworkName
+     wifi_pass=YourPassword
+     bt_name=YourBluetoothName
+     bt_pin=0000
+
+3. /wifi_saved.txt (Auto-created after WiFi connection)
+   - Stores last successful WiFi connection
+   - Device will auto-connect on boot
+   - Line 1: SSID
+   - Line 2: Password
+
+4. /patterns.txt (Auto-created by learning system)
+   - Stores learned keyboard shortcuts
+   - Format: trigger->action
+   - Example:
+     wifi->wifi
+     scan->scan
+
+===================================
+FEATURES NOW WORKING:
+===================================
+
+✅ WiFi passwords are SAVED after successful connection
+✅ Auto-connects to saved WiFi on boot
+✅ Main menu shows WiFi status (ON/OFF)
+✅ Main menu shows API key status (KEY/NO KEY)
+✅ "Password Saved!" message after connecting
+
+===================================
+HOW TO USE:
+===================================
+
+1. FORMAT SD card as FAT32
+2. CREATE /ai_key.txt with your API key
+3. INSERT card into Cardputer
+4. POWER ON - device auto-boots
+5. CONNECT to WiFi once - password saved!
+6. NEXT BOOT - auto-connects!
+
+===================================
+STATUS INDICATORS:
+===================================
+
+Main Menu (top right):
+- WiFi:ON  = Connected (green)
+- WiFi:OFF = Not connected (red)
+- AI:KEY   = API key loaded (green)
+- AI:NO KEY = Need to add ai_key.txt (orange)
+
+===================================

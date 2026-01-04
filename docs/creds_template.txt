@@ -1,0 +1,4 @@
+wifi_ssid=YourWiFiNetwork
+wifi_pass=YourWiFiPassword
+bt_name=MyCardputer
+bt_pin=1234
